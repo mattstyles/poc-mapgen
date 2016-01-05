@@ -13,9 +13,12 @@
     "budo": "^7.1.0"
   },
   "dependencies": {
+    "bezier-easing": "^1.1.1",
     "canvas-fit": "^1.5.0",
+    "fast-simplex-noise": "^1.0.0",
     "lodash.random": "^3.0.1",
     "mathutil": "^0.2.0",
-    "qs": "^6.0.1"
+    "qs": "^6.0.1",
+    "seedrandom": "^2.4.2"
   }
 }

@@ -11,11 +11,17 @@ var renderDiagram = require( './render' )( canvas )
 
 var query = qs.parse( window.location.search.replace( /^\?/, '' ) )
 
+var width = C.WORLD_SIZE[ 0 ]
+var height = C.WORLD_SIZE[ 1 ]
+var variance = C.PERTURB
+var variance2 = variance / 2
+var variance4 = variance / 4
+
 var box = {
   xl: 0,
-  xr: canvas.width,
+  xr: width,
   yt: 0,
-  yb: canvas.height
+  yb: height
 }
 
 var voronoi = new Voronoi()
@@ -24,14 +30,12 @@ var sites = []
 
 function generatePerturbedMap() {
   let sites = []
-  for ( let y = canvas.height * .05; y <= canvas.height; y += canvas.height * .1 ) {
-    for ( let x = canvas.width * .05; x <= canvas.width; x += canvas.width * .1 ) {
+  for ( let y = variance2; y <= height; y += variance ) {
+    for ( let x = variance2; x <= width; x += variance ) {
       // perturb and push
       sites.push({
-        // x: x + random( -canvas.width * .05, canvas.width * .05 ),
-        // y: y + random( -canvas.height * .05, canvas.height * .05 )
-        x: x,
-        y: y
+        x: x + random( -variance2, variance2 ),
+        y: y + random( -variance2, variance2 )
       })
     }
   }
