@@ -1,0 +1,19 @@
+{
+  "name": "voronoi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "budo --live index.js"
+  },
+  "author": "Matt Styles <matt@veryfizzyjelly.com> (http://github.com/mattstyles)",
+  "license": "ISC",
+  "devDependencies": {
+    "budo": "^7.1.0"
+  },
+  "dependencies": {
+    "canvas-fit": "^1.5.0",
+    "mathutil": "^0.2.0"
+  }
+}
