@@ -3,14 +3,13 @@
 
 var clamp = require( 'mathutil' ).clamp
 var lerp = require( 'mathutil' ).lerp
-var C = require( './constants' )
-var iterate = require( './iterate' )
 var Noise = require( './noise' )
 
-var noise = new Noise()
+var noise = new Noise({
+  persistence: 1 / Math.pow( 2, 2 ),
+  frequency: 1 / Math.pow( 2, 10 )
+})
 
-var CHUNK_WIDTH = C.CHUNK_SIZE * C.TILE_SIZE
-var CHUNK_HEIGHT = C.CHUNK_SIZE * C.TILE_SIZE
 
 var BIOME_COLORS = [
   [ 255, 0, 0 ],
@@ -24,15 +23,17 @@ function makeColor( color, alpha ) {
 }
 
 function color( value, alpha )  {
-  // let color = BIOME_COLORS[ biome ]
-  // color = color.map( col => lerp( value, 0, col ) | 0 )
-  let color = [
-    clamp( value, 0, 1 ) * 0xff | 0,
-    clamp( value, 0, 1 ) * 0xff | 0,
-    clamp( value, 0, 1 ) * 0xff | 0
-  ]
+  let biome = BIOME_COLORS[ value * BIOME_COLORS.length | 0 ]
+  biome = biome.map( col => lerp( value, 0, col ) | 0 )
 
-  return makeColor( color, alpha || 1 )
+  // let col = [
+  //   clamp( value, 0, 1 ) * 0xff | 0,
+  //   clamp( value, 0, 1 ) * 0xff | 0,
+  //   clamp( value, 0, 1 ) * 0xff | 0
+  // ]
+
+  // return makeColor( col, alpha || 1 )
+  return makeColor( biome, alpha || 1 )
 }
 
 module.exports = function renderable( canvas ) {
