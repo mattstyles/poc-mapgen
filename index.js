@@ -30,7 +30,7 @@ var region = new Region({
 })
 
 var region2 = new Region({
-  x: 200,
+  x: C.WORLD_SIZE[ 0 ],
   y: 0,
   width: C.WORLD_SIZE[ 0 ],
   height: C.WORLD_SIZE[ 1 ],
@@ -38,9 +38,23 @@ var region2 = new Region({
 })
 
 
+
+
 var start = performance.now()
 console.log( 'generating voronoi' )
 region.diagram = region.voronoi()
+
+// region.diagram.vertices.forEach( vertex => {
+//   // console.log( vertex.x, region2.origin[ 0 ] )
+//   if ( vertex.x === region2.origin[ 0 ] ) {
+//     // console.log( 'pushing' )
+//     region2.sites.push({
+//       x: vertex.x,
+//       y: vertex.y
+//     })
+//   }
+// })
+
 region2.diagram = region2.voronoi()
 console.log( 'done', performance.now() - start )
 
@@ -51,5 +65,6 @@ function render() {
 
 render()
 
-// window.region = region
-window.renderHeightmap = renderHeightmap
+window.region = region
+window.region2 = region2
+window.renderHeightmap = renderHeightmap //eg renderHeightmap({x:0,y:0,width:800,height:400})

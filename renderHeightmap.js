@@ -5,7 +5,9 @@ var clamp = require( 'mathutil' ).clamp
 var lerp = require( 'mathutil' ).lerp
 var C = require( './constants' )
 var iterate = require( './iterate' )
-var noise = require( './noise' )
+var Noise = require( './noise' )
+
+var noise = new Noise()
 
 function makeColor( color, alpha ) {
   alpha = alpha || 1

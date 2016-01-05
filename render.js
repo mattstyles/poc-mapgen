@@ -5,7 +5,9 @@ var clamp = require( 'mathutil' ).clamp
 var lerp = require( 'mathutil' ).lerp
 var C = require( './constants' )
 var iterate = require( './iterate' )
-var noise = require( './noise' )
+var Noise = require( './noise' )
+
+var noise = new Noise()
 
 var CHUNK_WIDTH = C.CHUNK_SIZE * C.TILE_SIZE
 var CHUNK_HEIGHT = C.CHUNK_SIZE * C.TILE_SIZE
@@ -21,7 +23,7 @@ function makeColor( color, alpha ) {
   return 'rgba( ' + color[ 0 ] + ',' + color[ 1 ] + ',' + color[ 2 ] + ',' + alpha + ')'
 }
 
-function color( value, biome )  {
+function color( value, alpha )  {
   // let color = BIOME_COLORS[ biome ]
   // color = color.map( col => lerp( value, 0, col ) | 0 )
   let color = [
@@ -30,7 +32,7 @@ function color( value, biome )  {
     clamp( value, 0, 1 ) * 0xff | 0
   ]
 
-  return makeColor( color )
+  return makeColor( color, alpha || 1 )
 }
 
 module.exports = function renderable( canvas ) {
@@ -54,17 +56,20 @@ module.exports = function renderable( canvas ) {
       let halfedges = cell.halfedges
       let point = halfedges[ 0 ].getEndpoint()
       ctx.beginPath()
-      ctx.moveTo( region.origin[ 0 ] + point.x, region.origin[ 1 ] + point.y )
+      ctx.moveTo( point.x, point.y )
       for ( let j = 0; j < halfedges.length; j++ ) {
         let point = halfedges[ j ].getEndpoint()
-        ctx.lineTo( region.origin[ 0 ] + point.x, region.origin[ 1 ] + point.y )
+        ctx.lineTo( point.x, point.y )
 
+        // Render the vertex point
+        // ctx.fillStyle = color( noise.getEase( region.origin[ 0 ] + cell.site.x, region.origin[ 1 ] + cell.site.y ) )
+        // ctx.fillRect( point.x - 2, point.y - 2, 5, 5 )
       }
 
-      ctx.lineTo( region.origin[ 0 ] + point.x, region.origin[ 1 ] + point.y )
+      ctx.lineTo( point.x, point.y )
 
       // let col = makeColor( [ i * 2, i * 2, i * 2 ], 1 )
-      let col = color( noise.getEase( region.origin[ 0 ] + cell.site.x, region.origin[ 1 ] + cell.site.y ) )
+      let col = color( noise.get( cell.site.x, cell.site.y ), 1 )
 
       ctx.fillStyle = col
       ctx.fill()
@@ -75,7 +80,7 @@ module.exports = function renderable( canvas ) {
     }
 
     // Render vertices
-    // ctx.fillStyle = 'rgb( 0, 0, 0 )'
+    // ctx.fillStyle = 'rgb( 0, 0, 255 )'
     // for ( let i = 0; i < diagram.vertices.length; i++ ) {
     //   let vertex = diagram.vertices[ i ]
     //   ctx.fillRect( vertex.x - 1, vertex.y - 1, 3, 3 )
@@ -92,11 +97,11 @@ module.exports = function renderable( canvas ) {
     // }
 
     // Render initial seed sites
-    // ctx.fillStyle = 'rgb( 255, 0, 0 )'
-    // for ( let i = 0; i < diagram.cells.length; i++ ) {
-    //   let site = diagram.cells[ i ].site
-    //   ctx.fillRect( site.x - 1, site.y - 1, 3, 3 )
-    // }
+    ctx.fillStyle = 'rgb( 255, 0, 0 )'
+    for ( let i = 0; i < diagram.cells.length; i++ ) {
+      let site = diagram.cells[ i ].site
+      ctx.fillRect( site.x - 1, site.y - 1, 3, 3 )
+    }
 
     console.log( 'rendering done', performance.now() - start )
   }
