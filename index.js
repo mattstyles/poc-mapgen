@@ -37,23 +37,42 @@ var region2 = new Region({
   divisions: C.DIVISIONS
 })
 
-region2.smoothVertices( region )
+region2.smoothVertices( 'left', region )
+
+var region3 = new Region({
+  x: 0,
+  y: C.WORLD_SIZE[ 1 ],
+  width: C.WORLD_SIZE[ 0 ],
+  height: C.WORLD_SIZE[ 1 ],
+  divisions: C.DIVISIONS
+})
+
+region3.smoothVertices( 'top', region )
+
+var region4 = new Region({
+  x: C.WORLD_SIZE[ 0 ],
+  y: C.WORLD_SIZE[ 1 ],
+  width: C.WORLD_SIZE[ 0 ],
+  height: C.WORLD_SIZE[ 1 ],
+  divisions: C.DIVISIONS
+})
+
+region4.smoothVertices( 'top', region2 )
+region4.smoothVertices( 'left', region3 )
 
 
-// var start = performance.now()
-// console.log( 'generating voronoi' )
-// // region.diagram = region.voronoi()
-// // region2.diagram = region2.voronoi()
-// console.log( 'done', performance.now() - start )
 
 function render() {
   renderRegion( region )
   renderRegion( region2 )
+  renderRegion( region3 )
+  renderRegion( region4 )
 }
 
 render()
 
 window.region = region
-window.region2 = region2
+// window.region2 = region2
+window.region3 = region3
 window.renderHeightmap = renderHeightmap //eg renderHeightmap({x:0,y:0,width:800,height:400})
 window.render = render

@@ -59,14 +59,6 @@ class Region {
 
   /**
    * Simple grid perturbation
-   *
-   * @TODO currenly regions share edge vertices so that polygons appear to stride
-   * region boundaries, but they do not, they are two polygons that share a site
-   * so they use the same site seed to generate their colour/biome.
-   * Instead, sites should be chosen _inside_ a region and any edge vertices should
-   * be smoothed to any pre-existing vertices. i.e. if a region is being generated
-   * then let it generate randomly and then match vertices (not sites) with adjacent
-   * regions, it will also be necessary to smooth edges or match biome type.
    */
   generateSeedMap() {
     let seedmap = new Seedmap({
@@ -92,17 +84,74 @@ class Region {
   }
 
   /**
-   * @TODO smoothes vertices to match edges
-   * @TODO currently just smoothes the left edge
+   * Returns a strip of edge vertices
    */
-  smoothVertices( region ) {
-    let matchStrip = region.diagram.vertices.filter( function( vertex ) {
-      return vertex.x === this.origin[ 0 ]
-    }.bind( this ) )
+  getEdgeVertices( edge ) {
+    var bounds = [
+      this.origin[ 0 ],
+      this.origin[ 1 ],
+      this.origin[ 0 ] + this.dimensions[ 0 ],
+      this.origin[ 1 ] + this.dimensions[ 1 ]
+    ]
 
-    let strip = this.diagram.vertices.filter( function( vertex ) {
-      return vertex.x === this.origin[ 0 ]
+    return this.diagram.vertices.filter( function( vertex ) {
+      if ( edge === 'left' ) {
+        return vertex.x === bounds[ 0 ]
+      }
+
+      if ( edge === 'right' ) {
+        return vertex.x === bounds[ 2 ]
+      }
+
+      if ( edge === 'top' ) {
+        return vertex.y === bounds[ 1 ]
+      }
+
+      if ( edge === 'bottom' ) {
+        return vertex.y === bounds[ 3 ]
+      }
+
+      // If we got here then the edge enum is not good so throw
+      throw new Error( 'edge ' + edge + ' not recognised' )
     }.bind( this ) )
+  }
+
+  /**
+   * Smoothes vertices along an edge
+   * Regions do not keep track of their neighbours so this needs to be called
+   * by the object keeping track of regions and their locations
+   */
+  smoothVertices( edge, region ) {
+
+    // The strip to match - this already exists and should be considered immutable
+    var matchStrip = null
+    // The strip to mutate - it should end up matching up with matchStrip points
+    var strip = null
+
+    if ( edge === 'left' ) {
+      matchStrip = region.getEdgeVertices( 'right' )
+      strip = this.getEdgeVertices( 'left' )
+    }
+
+    if ( edge === 'right' ) {
+      matchStrip = region.getEdgeVertices( 'left' )
+      strip = this.getEdgeVertices( 'right' )
+    }
+
+    if ( edge === 'top' ) {
+      matchStrip = region.getEdgeVertices( 'bottom' )
+      strip = this.getEdgeVertices( 'top' )
+    }
+
+    if ( edge === 'bottom' ) {
+      matchStrip = region.getEdgeVertices( 'top' )
+      strip = this.getEdgeVertices( 'bottom' )
+    }
+
+    // Quick sanity check
+    if ( !matchStrip || !strip ) {
+      throw new Error( 'edge ' + edge + ' not recognised' )
+    }
 
     /**
      * Iterates the strip and finds the closest vertex to the supplied vertex
@@ -111,12 +160,20 @@ class Region {
       let target = strip[ 0 ]
       let closest = Number.MAX_SAFE_INTEGER
       strip.forEach( function( v ) {
-        let distance = Math.abs( v.y - vertex.y )
+        // @TODO noop for closest, although a while loop will still be quicker
+        if ( closest === 0 ) {
+          return
+        }
+
+        // Use x or y depending on horizontal or vertical edge
+        let distance = ( edge === 'left' || edge === 'right' )
+          ? Math.abs( v.y - vertex.y )
+          : Math.abs( v.x - vertex.x )
+
         if ( distance < closest ) {
           target = v
           closest = distance
         }
-        // @TODO bail if distance = 0
       })
 
       return target
