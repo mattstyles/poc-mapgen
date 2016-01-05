@@ -16,6 +16,11 @@ var BIOME_COLORS = [
   [ 0, 0, 255 ]
 ]
 
+function makeColor( color, alpha ) {
+  alpha = alpha || 1
+  return 'rgba( ' + color[ 0 ] + ',' + color[ 1 ] + ',' + color[ 2 ] + ',' + alpha + ')'
+}
+
 function color( value, biome )  {
   // let color = BIOME_COLORS[ biome ]
   // color = color.map( col => lerp( value, 0, col ) | 0 )
@@ -25,7 +30,7 @@ function color( value, biome )  {
     clamp( value, 0, 1 ) * 0xff | 0
   ]
 
-  return 'rgb( ' + color[ 0 ] + ',' + color[ 1 ] + ',' + color[ 2 ] + ')'
+  return makeColor( color )
 }
 
 module.exports = function renderable( canvas ) {
@@ -41,35 +46,6 @@ module.exports = function renderable( canvas ) {
     var start = performance.now()
     console.log( 'rendering' )
 
-    // if ( !chunks ) {
-    //   console.error( 'no chunks to render' )
-    //   return
-    // }
-    //
-    // // Iterate over each block in the map
-    // iterate( chunks, function( x, y ) {
-    //   var chunk = this.get( x, y )
-    //
-    //   // Iterate over each tile within the chunk
-    //   iterate( chunk.data, function( i, j ) {
-    //     var tile = this.get( i, j )
-    //
-    //     ctx.fillStyle = color( tile, chunk.biome )
-    //     ctx.fillRect(
-    //       ( x * CHUNK_WIDTH ) + ( i * C.TILE_SIZE ),
-    //       ( y * CHUNK_WIDTH ) + ( j * C.TILE_SIZE ),
-    //       C.TILE_SIZE,
-    //       C.TILE_SIZE
-    //     )
-    //   })
-    // })
-
-    // Render initial seed sites
-    ctx.fillStyle = 'rgb( 255, 0, 0 )'
-    for ( let i = 0; i < diagram._sites.length; i++ ) {
-      let site = diagram._sites[ i ]
-      ctx.fillRect( site.x - 1, site.y - 1, 3, 3 )
-    }
 
     // Render vertices
     ctx.fillStyle = 'rgb( 0, 0, 0 )'
@@ -84,8 +60,51 @@ module.exports = function renderable( canvas ) {
       ctx.beginPath()
       ctx.moveTo( edge.va.x, edge.va.y )
       ctx.lineTo( edge.vb.x, edge.vb.y )
-      ctx.strokeStyle = 'rgb( 0, 0, 255 )'
+      ctx.strokeStyle = 'rgb( 230, 230, 242 )'
       ctx.stroke()
+    }
+
+    // Render initial seed sites
+    ctx.fillStyle = 'rgb( 255, 0, 0 )'
+    for ( let i = 0; i < diagram.cells.length; i++ ) {
+      let site = diagram.cells[ i ].site
+      ctx.fillRect( site.x - 1, site.y - 1, 3, 3 )
+    }
+
+    // Render cells
+    ctx.fillStyle = 'rgb( 0, 255, 0 )'
+    for ( let i = 0; i < diagram.cells.length; i++ ) {
+    // for ( let i = 50; i < 51; i++ ) {
+      let halfedges = diagram.cells[ i ].halfedges
+      let point = halfedges[ 0 ].getEndpoint()
+      ctx.beginPath()
+      ctx.moveTo( point.x, point.y )
+      for ( let j = 0; j < halfedges.length; j++ ) {
+        let point = halfedges[ j ].getEndpoint()
+        ctx.lineTo( point.x, point.y )
+
+
+
+        // ctx.font = '20px Coolville'
+        //
+        // // Mark va
+        // ctx.fillStyle = makeColor([ 0, 255 / j, 0 ])
+        // ctx.fillRect( edge.va.x - 10, edge.va.y - 2, 5, 5 )
+        // ctx.fillText( j + 'A', edge.va.x - 10, edge.va.y )
+        //
+        // // Mark vb
+        // ctx.fillStyle = makeColor([ 255 / j, 0, 255 ])
+        // ctx.fillRect( edge.vb.x + 10, edge.vb.y - 2, 5, 5 )
+        // ctx.fillText( j + 'B', edge.vb.x + 10, edge.vb.y )
+      }
+
+      ctx.lineTo( point.x, point.y )
+
+      ctx.fillStyle = makeColor( [ i * 2, i * 2, i * 2 ], .2 )
+      ctx.fill()
+      // ctx.strokeStyle = 'rgb( 0, 0, 0 )'
+      // ctx.stroke()
+
     }
 
     console.log( 'rendering done', performance.now() - start )
