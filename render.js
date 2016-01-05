@@ -36,8 +36,10 @@ module.exports = function renderable( canvas ) {
 
   window.addEventListener( 'resize', fit( canvas ), false )
 
-  return function render( voronoi ) {
-    console.log( voronoi )
+  return function render( diagram ) {
+    console.log( diagram )
+    var start = performance.now()
+    console.log( 'rendering' )
 
     // if ( !chunks ) {
     //   console.error( 'no chunks to render' )
@@ -62,7 +64,30 @@ module.exports = function renderable( canvas ) {
     //   })
     // })
 
+    // Render initial seed sites
+    ctx.fillStyle = 'rgb( 255, 0, 0 )'
+    for ( let i = 0; i < diagram._sites.length; i++ ) {
+      let site = diagram._sites[ i ]
+      ctx.fillRect( site.x - 1, site.y - 1, 3, 3 )
+    }
 
+    // Render vertices
+    ctx.fillStyle = 'rgb( 0, 0, 0 )'
+    for ( let i = 0; i < diagram.vertices.length; i++ ) {
+      let vertex = diagram.vertices[ i ]
+      ctx.fillRect( vertex.x - 1, vertex.y - 1, 3, 3 )
+    }
 
+    // Render edges
+    for ( let i = 0; i < diagram.edges.length; i++ ) {
+      let edge = diagram.edges[ i ]
+      ctx.beginPath()
+      ctx.moveTo( edge.va.x, edge.va.y )
+      ctx.lineTo( edge.vb.x, edge.vb.y )
+      ctx.strokeStyle = 'rgb( 0, 0, 255 )'
+      ctx.stroke()
+    }
+
+    console.log( 'rendering done', performance.now() - start )
   }
 }
