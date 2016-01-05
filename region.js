@@ -20,6 +20,15 @@ var perturbNoise = new Noise({
   persistence: .4
 })
 
+var rangeNoise = new Noise({
+  min: 0,
+  max: 1,
+  amplitude: 1,
+  frequency: .05,
+  octaves: 4,
+  persistence: .05
+})
+
 var voronoi = new Voronoi()
 
 
@@ -105,6 +114,12 @@ class Region {
           x: x,
           y: y + variance[ 1 ]
         })
+        return
+      }
+
+      // Add a small chance that a central vertex will be missing
+      if ( rangeNoise.get( x, y ) < .25 ) {
+        console.log( 'skip' )
         return
       }
 
