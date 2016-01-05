@@ -50,6 +50,11 @@ class Region {
     this.divisions = opts.divisions
 
     this.sites = this.generateSeedMap()
+
+    var start = performance.now()
+    console.log( 'generating voronoi' )
+    this.diagram = this.generateVoronoi()
+    console.log( 'voronoi done', performance.now() - start )
   }
 
   /**
@@ -77,13 +82,53 @@ class Region {
   /**
    * Returns the voronoi computation
    */
-  voronoi() {
+  generateVoronoi() {
     return voronoi.compute( this.sites, {
       xl: this.origin[ 0 ],
       xr: this.origin[ 0 ] + this.dimensions[ 0 ],
       yt: this.origin[ 1 ],
       yb: this.origin[ 1 ] + this.dimensions[ 1 ]
     })
+  }
+
+  /**
+   * @TODO smoothes vertices to match edges
+   * @TODO currently just smoothes the left edge
+   */
+  smoothVertices( region ) {
+    let matchStrip = region.diagram.vertices.filter( function( vertex ) {
+      return vertex.x === this.origin[ 0 ]
+    }.bind( this ) )
+
+    let strip = this.diagram.vertices.filter( function( vertex ) {
+      return vertex.x === this.origin[ 0 ]
+    }.bind( this ) )
+
+    /**
+     * Iterates the strip and finds the closest vertex to the supplied vertex
+     */
+    function findClosest( vertex, strip ) {
+      let target = strip[ 0 ]
+      let closest = Number.MAX_SAFE_INTEGER
+      strip.forEach( function( v ) {
+        let distance = Math.abs( v.y - vertex.y )
+        if ( distance < closest ) {
+          target = v
+          closest = distance
+        }
+        // @TODO bail if distance = 0
+      })
+
+      return target
+    }
+
+    // For each current vertex, find the closest and update
+    strip.forEach( function( v ) {
+      let target = findClosest( v, matchStrip )
+      v.x = target.x
+      v.y = target.y
+    })
+
   }
 }
 
