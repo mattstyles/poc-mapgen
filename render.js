@@ -1,7 +1,6 @@
 
 'use strict';
 
-var fit = require( 'canvas-fit' )
 var clamp = require( 'mathutil' ).clamp
 var lerp = require( 'mathutil' ).lerp
 var C = require( './constants' )
@@ -38,15 +37,13 @@ module.exports = function renderable( canvas ) {
 
   var ctx = canvas.getContext( '2d' )
 
-  document.body.appendChild( canvas )
 
-  window.addEventListener( 'resize', fit( canvas ), false )
-
-  return function render( diagram ) {
-    console.log( diagram )
+  return function render( region ) {
+    console.log( region )
     var start = performance.now()
     console.log( 'rendering' )
 
+    var diagram = region.diagram
 
 
 
@@ -57,30 +54,17 @@ module.exports = function renderable( canvas ) {
       let halfedges = cell.halfedges
       let point = halfedges[ 0 ].getEndpoint()
       ctx.beginPath()
-      ctx.moveTo( point.x, point.y )
+      ctx.moveTo( region.origin[ 0 ] + point.x, region.origin[ 1 ] + point.y )
       for ( let j = 0; j < halfedges.length; j++ ) {
         let point = halfedges[ j ].getEndpoint()
-        ctx.lineTo( point.x, point.y )
+        ctx.lineTo( region.origin[ 0 ] + point.x, region.origin[ 1 ] + point.y )
 
-
-
-        // ctx.font = '20px Coolville'
-        //
-        // // Mark va
-        // ctx.fillStyle = makeColor([ 0, 255 / j, 0 ])
-        // ctx.fillRect( edge.va.x - 10, edge.va.y - 2, 5, 5 )
-        // ctx.fillText( j + 'A', edge.va.x - 10, edge.va.y )
-        //
-        // // Mark vb
-        // ctx.fillStyle = makeColor([ 255 / j, 0, 255 ])
-        // ctx.fillRect( edge.vb.x + 10, edge.vb.y - 2, 5, 5 )
-        // ctx.fillText( j + 'B', edge.vb.x + 10, edge.vb.y )
       }
 
-      ctx.lineTo( point.x, point.y )
+      ctx.lineTo( region.origin[ 0 ] + point.x, region.origin[ 1 ] + point.y )
 
       // let col = makeColor( [ i * 2, i * 2, i * 2 ], 1 )
-      let col = color( noise.getEase( cell.site.x, cell.site.y ) )
+      let col = color( noise.getEase( region.origin[ 0 ] + cell.site.x, region.origin[ 1 ] + cell.site.y ) )
 
       ctx.fillStyle = col
       ctx.fill()
