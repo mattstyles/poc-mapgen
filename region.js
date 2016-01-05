@@ -8,6 +8,7 @@
  */
 
 var Voronoi = require( './voronoi' )
+var Seedmap = require( './seedmap' )
 var clamp = require( 'mathutil' ).clamp
 var Noise = require( './noise' )
 
@@ -48,96 +49,30 @@ class Region {
     this.dimensions = [ opts.width, opts.height ]
     this.divisions = opts.divisions
 
-    this.sites = this.generateSiteMap()
+    this.sites = this.generateSeedMap()
   }
 
   /**
    * Simple grid perturbation
+   *
+   * @TODO currenly regions share edge vertices so that polygons appear to stride
+   * region boundaries, but they do not, they are two polygons that share a site
+   * so they use the same site seed to generate their colour/biome.
+   * Instead, sites should be chosen _inside_ a region and any edge vertices should
+   * be smoothed to any pre-existing vertices. i.e. if a region is being generated
+   * then let it generate randomly and then match vertices (not sites) with adjacent
+   * regions, it will also be necessary to smooth edges or match biome type.
    */
-  generateSiteMap() {
-    let chunkSize = [
-      this.dimensions[ 0 ] / this.divisions,
-      this.dimensions[ 1 ] / this.divisions
-    ]
+  generateSeedMap() {
+    let seedmap = new Seedmap({
+      origin: this.origin,
+      dimensions: this.dimensions,
+      divisions: this.divisions
+    })
 
-    let bounds = [
-      this.origin[ 0 ],
-      this.origin[ 1 ],
-      this.origin[ 0 ] + this.dimensions[ 0 ],
-      this.origin[ 1 ] + this.dimensions[ 1 ]
-    ]
-
-    let sites = []
-
-    function isCorner( x, y ) {
-      return (  ( x === bounds[ 0 ] && y === bounds[ 1 ] ) ||    // tl
-                ( x === bounds[ 2 ] && y === bounds[ 1 ] ) ||    // tr
-                ( x === bounds[ 0 ] && y === bounds[ 3 ] ) ||    // bl
-                ( x === bounds[ 2 ] && y === bounds[ 3 ] ) )   // br
-    }
-
-    function isHorizontalEdge( x, y ) {
-      return ( y === bounds[ 1 ] || y === bounds[ 3 ] )
-    }
-
-    function isVerticalEdge( x, y ) {
-      return ( x === bounds[ 0 ] || x === bounds[ 2 ] )
-    }
-
-    function pushSite( x, y ) {
-      let variance = [
-        chunkSize[ 0 ] * perturbNoise.get( x, y ),
-        chunkSize[ 1 ] * perturbNoise.get( -x, -y )
-      ]
-
-      // If corner then just push
-      if ( isCorner( x, y ) ) {
-        sites.push({
-          x: x,
-          y: y
-        })
-        return
-      }
-
-      // Perturb horizontal edge vertices along x
-      if ( isHorizontalEdge( x, y ) ) {
-        sites.push({
-          x: x + variance[ 0 ],
-          y: y
-        })
-        return
-      }
-
-      // Perturb vertical edge vertices along y
-      if ( isVerticalEdge( x, y ) ) {
-        sites.push({
-          x: x,
-          y: y + variance[ 1 ]
-        })
-        return
-      }
-
-      // Add a small chance that a central vertex will be missing
-      if ( rangeNoise.get( x, y ) < .25 ) {
-        console.log( 'skip' )
-        return
-      }
-
-      // Perturb central vertices along x and y
-      sites.push({
-        x: x + variance[ 0 ],
-        y: y + variance[ 1 ]
-      })
-    }
-
-    for ( let y = bounds[ 1 ]; y <= bounds[ 3 ]; y += chunkSize[ 1 ] ) {
-      for ( let x = bounds[ 0 ]; x <= bounds[ 2 ]; x += chunkSize[ 0 ] ) {
-        pushSite( x, y )
-      }
-    }
-
-    return sites
+    return seedmap.generate()
   }
+
 
   /**
    * Returns the voronoi computation

@@ -69,22 +69,21 @@ module.exports = function renderable( canvas ) {
       ctx.lineTo( point.x, point.y )
 
       // let col = makeColor( [ i * 2, i * 2, i * 2 ], 1 )
-      let col = color( noise.get( cell.site.x, cell.site.y ), 1 )
+      let col = color( noise.get( cell.site.x, cell.site.y ), .1 )
 
       ctx.fillStyle = col
       ctx.fill()
-      // ctx.strokeStyle = 'rgb( 0, 0, 0 )'
       ctx.strokeStyle = col
       ctx.stroke()
 
     }
 
     // Render vertices
-    // ctx.fillStyle = 'rgb( 0, 0, 255 )'
-    // for ( let i = 0; i < diagram.vertices.length; i++ ) {
-    //   let vertex = diagram.vertices[ i ]
-    //   ctx.fillRect( vertex.x - 1, vertex.y - 1, 3, 3 )
-    // }
+    ctx.fillStyle = 'rgb( 0, 0, 255 )'
+    for ( let i = 0; i < diagram.vertices.length; i++ ) {
+      let vertex = diagram.vertices[ i ]
+      ctx.fillRect( vertex.x - 1, vertex.y - 1, 3, 3 )
+    }
 
     // Render edges
     // for ( let i = 0; i < diagram.edges.length; i++ ) {

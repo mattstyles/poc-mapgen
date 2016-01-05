@@ -43,12 +43,12 @@ var region2 = new Region({
 var start = performance.now()
 console.log( 'generating voronoi' )
 region.diagram = region.voronoi()
-region2.diagram = region2.voronoi()
+// region2.diagram = region2.voronoi()
 console.log( 'done', performance.now() - start )
 
 function render() {
   renderRegion( region )
-  renderRegion( region2 )
+  // renderRegion( region2 )
 }
 
 render()
@@ -56,3 +56,4 @@ render()
 window.region = region
 window.region2 = region2
 window.renderHeightmap = renderHeightmap //eg renderHeightmap({x:0,y:0,width:800,height:400})
+window.render = render
