@@ -7,15 +7,28 @@ var Noise = require( './noise' )
 
 var noise = new Noise({
   persistence: 1 / Math.pow( 2, 2 ),
-  frequency: 1 / Math.pow( 2, 10 )
+  frequency: 1 / Math.pow( 2, 7.5 )
 })
 
 
 var BIOME_COLORS = [
-  [ 255, 0, 0 ],
-  [ 0, 255, 0 ],
-  [ 0, 0, 255 ]
+  [ 54, 54, 97 ],
+  [ 196, 212, 170 ],
+  [ 169, 204, 164 ]
 ]
+
+function getBiome( value ) {
+  if ( value >= 0 && value < .3 ) {
+    return BIOME_COLORS[ 0 ]
+  }
+  if ( value >= .3 && value <= .75 ) {
+    return BIOME_COLORS[ 1 ]
+  }
+  if ( value >= .75 && value <= 1 ) {
+    return BIOME_COLORS[ 2 ]
+  }
+  throw new Error( 'nope, colour should never hit here' )
+}
 
 function makeColor( color, alpha ) {
   alpha = alpha || 1
@@ -23,7 +36,9 @@ function makeColor( color, alpha ) {
 }
 
 function color( value, alpha )  {
-  let biome = BIOME_COLORS[ value * BIOME_COLORS.length | 0 ]
+  // let biome = BIOME_COLORS[ value * BIOME_COLORS.length | 0 ]
+  let biome = getBiome( value )
+
   biome = biome.map( col => lerp( value, 0, col ) | 0 )
 
   // let col = [
@@ -70,7 +85,7 @@ module.exports = function renderable( canvas ) {
       ctx.lineTo( point.x, point.y )
 
       // let col = makeColor( [ i * 2, i * 2, i * 2 ], 1 )
-      let col = color( noise.get( cell.site.x, cell.site.y ), 1 )
+      let col = color( noise.getEase( cell.site.x, cell.site.y ), 1 )
 
       ctx.fillStyle = col
       ctx.fill()

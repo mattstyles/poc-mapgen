@@ -12,8 +12,8 @@ var SimplexNoise = require( 'fast-simplex-noise' )
 var Bezier = require( 'bezier-easing' )
 var PRNG = require( 'seedrandom' )
 
-//var seed = query.seed || require( './package.json' ).name
-var seed = Math.random()
+var seed = query.seed || require( './package.json' ).name
+// var seed = Math.random()
 var random = new PRNG( seed )
 
 // var bezier = new Bezier( .75, 1, .85, 1 )
