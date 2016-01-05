@@ -9,7 +9,11 @@ module.exports = function iterate( arr, fn ) {
 
   for ( var x = 0; x < width; x++ ) {
     for ( var y = 0; y < width; y++ ) {
-      fn.call( arr, x, y )
+      let item = arr.get( x, y )
+      if ( item ) {
+        fn( item )
+      }
+      // fn.call( arr, arr.get( x, y ) )
     }
   }
 }

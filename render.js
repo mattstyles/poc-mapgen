@@ -18,10 +18,10 @@ var BIOME_COLORS = [
 ]
 
 function getBiome( value ) {
-  if ( value >= 0 && value < .3 ) {
+  if ( value >= 0 && value < .25 ) {
     return BIOME_COLORS[ 0 ]
   }
-  if ( value >= .3 && value <= .75 ) {
+  if ( value >= .25 && value <= .75 ) {
     return BIOME_COLORS[ 1 ]
   }
   if ( value >= .75 && value <= 1 ) {
@@ -39,7 +39,7 @@ function color( value, alpha )  {
   // let biome = BIOME_COLORS[ value * BIOME_COLORS.length | 0 ]
   let biome = getBiome( value )
 
-  biome = biome.map( col => lerp( value, 0, col ) | 0 )
+  // biome = biome.map( col => lerp( value, 0, col ) | 0 )
 
   // let col = [
   //   clamp( value, 0, 1 ) * 0xff | 0,

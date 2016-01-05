@@ -1,7 +1,7 @@
 
 module.exports = {
-  WORLD_SIZE: [ 400, 400 ],
-  DIVISIONS: 32,
+  WORLD_SIZE: [ 768, 768 ],
+  DIVISIONS: 64,
 
   SITES_KEY: 'voronoi_sites'
 }
