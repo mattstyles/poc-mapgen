@@ -7,7 +7,10 @@ var C = require( './constants' )
 var iterate = require( './iterate' )
 var Noise = require( './noise' )
 
-var noise = new Noise()
+var noise = new Noise({
+  persistence: 1 / Math.pow( 2, 2 ),
+  frequency: 1 / Math.pow( 2, 7.5 )
+})
 
 function makeColor( color, alpha ) {
   alpha = alpha || 1
@@ -33,11 +36,17 @@ module.exports = function renderable( canvas ) {
     var start = performance.now()
     console.log( 'rendering heightmap' )
 
+    var n = opts.noise || noise
+
     ctx.clearRect( 0, 0, canvas.width, canvas.height )
 
     for ( var y = opts.y; y < opts.y + opts.height; y++ ) {
       for ( var x = opts.x; x < opts.x + opts.width; x++ ) {
-        let col = color( noise.getEase( x, y ), 1 )
+        let col = color( n.getEase( x, y ), 1 )
+
+        if ( opts.noiseFn ) {
+          col = color( opts.noiseFn( x, y ) )
+        }
 
         ctx.fillStyle = col
         ctx.fillRect( x, y, 1, 1 )

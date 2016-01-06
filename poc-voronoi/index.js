@@ -38,3 +38,4 @@ render()
 window.world = world
 window.renderHeightmap = renderHeightmap //eg renderHeightmap({x:0,y:0,width:800,height:400})
 window.render = render
+window.Noise = require( './noise' )

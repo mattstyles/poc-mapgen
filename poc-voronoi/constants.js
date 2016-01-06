@@ -1,7 +1,11 @@
 
+var chunkSize = 16
+var worldSize = 512
+
 module.exports = {
-  WORLD_SIZE: [ 512, 512 ],
-  DIVISIONS: 32,
+  CHUNK_SIZE: chunkSize,
+  WORLD_SIZE: [ worldSize, worldSize ],
+  DIVISIONS: worldSize / chunkSize,
 
   SITES_KEY: 'voronoi_sites',
   EDGES: {
