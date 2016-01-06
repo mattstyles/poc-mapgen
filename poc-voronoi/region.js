@@ -9,6 +9,7 @@
 
 var Voronoi = require( './voronoi' )
 var Seedmap = require( './seedmap' )
+var InfluenceMap = require( './influencemap' )
 var C = require( './constants' )
 var clamp = require( 'mathutil' ).clamp
 var Noise = require( './noise' )
@@ -68,6 +69,7 @@ class Region {
     ]
 
     this.sites = this.generateSeedMap()
+    this.influences = this.generateInfluenceMap( 3 )
 
     var start = performance.now()
     console.log( 'generating voronoi' )
@@ -103,6 +105,18 @@ class Region {
     diagram = this.calculateBorders( diagram )
 
     return diagram
+  }
+
+  /**
+   * Generates an influence map
+   * Influences have a location and a power that determine overall z-height
+   * at their locations
+   * Influences get modelled like circular additive light sources and are
+   * applied to the overall heightmap
+   */
+  generateInfluenceMap( divisions ) {
+    let influenceMap = new InfluenceMap( this, divisions )
+    return influenceMap.generate()
   }
 
   /**

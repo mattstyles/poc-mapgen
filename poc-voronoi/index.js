@@ -24,7 +24,7 @@ var renderHeightmap = require( './renderHeightmap' )( heightmapCanvas )
 var world = new World()
 
 world.generate( 0, 0 )
-// world.generate( 1, 0 )
+world.generate( 1, 0 )
 // world.generate( 0, 1 )
 // world.generate( 1, 1 )
 

@@ -29,10 +29,12 @@ function dist( p0, p1 ) {
   return Math.sqrt( Math.pow( p0[ 0 ] - p1[ 0 ], 2 ) + Math.pow( p0[ 1 ] - p1[ 1 ], 2 ) )
 }
 
-var gradient = function( origin, radius, target ) {
+function gradient( origin, radius, target ) {
   let distance = clamp( dist( origin, target ), 0, 1 )
   return clamp( 1.0 - distance / radius, 0, 1 )
 }
+
+const PI2 = Math.PI * 2
 
 var BORDER_COLS = {
   [ C.EDGES.LEFT ]: [ 224, 111, 139 ],
@@ -89,47 +91,6 @@ function color( value, alpha )  {
 }
 
 
-/**
- * Checks if origin is close enough to target, given a variance
- */
-function close( origin, target, variance ) {
-  variance = variance || 5
-  return ( origin < target + variance ) && ( origin > target - variance )
-}
-
-/**
- * Checks dimensions and location and returns an edge enum or null
- * Unfortunately not all border vertices land smack on 0 so we have to do
- * a little shuffling to check they are close enough
- */
-function isBorderEdge( edge, region ) {
-  let bounds = [
-    region.origin[ 0 ],
-    region.origin[ 1 ],
-    region.origin[ 0 ] + region.dimensions[ 0 ],
-    region.origin[ 1 ] + region.dimensions[ 1 ],
-  ]
-  // left
-  if ( close( edge.va.x, bounds[ 0 ] ) && close( edge.vb.x, bounds[ 0 ] ) ) {
-    return C.EDGES.LEFT
-  }
-  // right
-  if ( close( edge.va.x, bounds[ 2 ] ) && close( edge.vb.x, bounds[ 2 ] ) ) {
-    return C.EDGES.RIGHT
-  }
-  // top
-  if ( close( edge.va.y, bounds[ 1 ] ) && close( edge.vb.y, bounds[ 1 ] ) ) {
-    return C.EDGES.TOP
-  }
-  // bottom
-  if ( close( edge.va.y, bounds[ 3 ] ) && close( edge.vb.y, bounds[ 3 ] ) ) {
-    return C.EDGES.BOTTOM
-  }
-}
-
-
-
-
 
 
 module.exports = function renderable( canvas ) {
@@ -176,6 +137,17 @@ module.exports = function renderable( canvas ) {
     ctx.stroke()
   }
 
+  function renderCircle( x, y, radius, col ) {
+    col = col || 'rgb( 247, 226, 107 )'
+    ctx.beginPath()
+    ctx.arc( x, y, radius, 0, PI2, false )
+    ctx.fillStyle = col
+    ctx.fill()
+  }
+
+  /**
+   * Master render function
+   */
   return function render( region ) {
     // console.log( region )
     var start = performance.now()
@@ -238,16 +210,19 @@ module.exports = function renderable( canvas ) {
       // @TODO use an influence map that helps determine water/land mix, any of
       // number of influences/powers can be specified but cardinal points/center
       // would be a good starting point
-      let power = .15
-      let influences = [
-        // gradient( [ .5, .5 ], .5, unit ),
-        // gradient( [ 1.0, 0.0 ], power, unit ),
-        // gradient( [ 1.0, 1.0 ], power, unit ),
-        gradient( [ 1.0, .5 ], power, unit ),
-        // gradient( [ .5, 1.0 ], power, unit ),
-        // gradient( [ 0.0, 0.0 ], power, unit ),
-        // gradient( [ 0.0, 1.0 ], power, unit )
-      ]
+      // let power = .15
+      // let influences = [
+      //   // gradient( [ .5, .5 ], .5, unit ),
+      //   // gradient( [ 1.0, 0.0 ], power, unit ),
+      //   // gradient( [ 1.0, 1.0 ], power, unit ),
+      //   gradient( [ 1.0, .5 ], power, unit ),
+      //   // gradient( [ .5, 1.0 ], power, unit ),
+      //   // gradient( [ 0.0, 0.0 ], power, unit ),
+      //   // gradient( [ 0.0, 1.0 ], power, unit )
+      // ]
+      let influences = region.influences.map( inf => {
+        return gradient( inf.origin, inf.pow, unit )
+      })
       // average influences
       // let influenceMap = influences.reduce( ( prev, curr ) => prev + curr ) // additive (will blow out whites, should be clamped)
       // let influenceMap = influences.reduce( ( prev, curr ) => prev + curr ) / influences.length (average, reduces overall power)
@@ -277,35 +252,6 @@ module.exports = function renderable( canvas ) {
     //   }
     // }
 
-    // // Render border cells
-    // for ( let i = 0; i < diagram.edges.length; i++ ) {
-    //   let edge = diagram.edges[ i ]
-    //   if ( !edge.rSite ) {
-    //     // Get which border
-    //     var col
-    //     if ( isBorderEdge( edge, region ) === C.EDGES.LEFT ) {
-    //       col = BORDER_COLORS[ 0 ]
-    //     }
-    //     if ( isBorderEdge( edge, region ) === C.EDGES.RIGHT ) {
-    //       col = BORDER_COLORS[ 2 ]
-    //     }
-    //     if ( isBorderEdge( edge, region ) === C.EDGES.TOP ) {
-    //       col = BORDER_COLORS[ 1 ]
-    //     }
-    //     if ( isBorderEdge( edge, region ) === C.EDGES.BOTTOM ) {
-    //       col = BORDER_COLORS[ 3 ]
-    //     }
-    //
-    //     // renderCell( diagram.cells[ edge.lSite.voronoiId ], makeColor( col ) )
-    //
-    //     // Just colour them all darker than their normal colour, simulating a vignette
-    //     let cell = diagram.cells[ edge.lSite.voronoiId ]
-    //     col = color( noise.getEase( cell.site.x, cell.site.y ) * .25 )
-    //
-    //     renderCell( cell, col )
-    //   }
-    // }
-
     // Render vertices
     // ctx.fillStyle = 'rgb( 0, 0, 255 )'
     // for ( let i = 0; i < diagram.vertices.length; i++ ) {
@@ -324,6 +270,16 @@ module.exports = function renderable( canvas ) {
     // for ( let i = 0; i < diagram.cells.length; i++ ) {
     //   let site = diagram.cells[ i ].site
     //   ctx.fillRect( site.x - 1, site.y - 1, 3, 3 )
+    // }
+
+    // Render influences
+    // var col = 'rgba( 247, 206, 128, .75 )'
+    // for ( let i = 0; i < region.influences.length; i++ ) {
+    //   let inf = region.influences[ i ]
+    //   // translate to region coords
+    //   let x = region.origin[ 0 ] + inf.origin[ 0 ] * region.dimensions[ 0 ]
+    //   let y = region.origin[ 1 ] + inf.origin[ 1 ] * region.dimensions[ 1 ]
+    //   renderCircle( x, y, inf.pow * region.dimensions[ 0 ], col )
     // }
 
     // console.log( 'rendering done', performance.now() - start )

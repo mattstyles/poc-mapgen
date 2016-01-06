@@ -165,7 +165,12 @@ class Seedmap extends Edgemap {
       this.chunkSize[ 0 ] * perturbNoise.get( x, y ),
       this.chunkSize[ 1 ] * perturbNoise.get( -x, -y )
     ]
-    
+
+    // Skip a few vertices to add variation
+    // if ( rangeNoise.get( x, y ) < .25 ) {
+    //   return
+    // }
+
     return {
       x: x + variance[ 0 ],
       y: y + variance[ 1 ]
