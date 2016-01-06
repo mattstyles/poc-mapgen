@@ -42,7 +42,7 @@ module.exports = function renderable( canvas ) {
 
     for ( var y = opts.y; y < opts.y + opts.height; y++ ) {
       for ( var x = opts.x; x < opts.x + opts.width; x++ ) {
-        let col = color( n.getEase( x, y ), 1 )
+        let col = color( n.get( x, y ), 1 )
 
         if ( opts.noiseFn ) {
           col = color( opts.noiseFn( x, y ) )

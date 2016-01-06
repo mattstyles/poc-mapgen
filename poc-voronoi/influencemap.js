@@ -10,7 +10,7 @@ var varying = require( './options' )
  */
 function getInfluence( x, y ) {
   // let pow = influenceNoise.get( x, y )
-  let pow = varying.heightmap.get( x, y )
+  let pow = varying.influenceHeightmap.get( x, y )
   if ( pow < varying.influenceDropoff ) {
     return 0
   }
