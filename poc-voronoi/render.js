@@ -25,6 +25,15 @@ var perturb = new Noise({
   frequency: 1 / Math.pow( 2, 7 )
 })
 
+function dist( p0, p1 ) {
+  return Math.sqrt( Math.pow( p0[ 0 ] - p1[ 0 ], 2 ) + Math.pow( p0[ 1 ] - p1[ 1 ], 2 ) )
+}
+
+var gradient = function( origin, radius, target ) {
+  let distance = clamp( dist( origin, target ), 0, 1 )
+  return clamp( 1.0 - distance / radius, 0, 1 )
+}
+
 var BORDER_COLS = {
   [ C.EDGES.LEFT ]: [ 224, 111, 139 ],
   [ C.EDGES.BOTTOM ]: [ 247, 226, 107 ],
@@ -118,9 +127,6 @@ function isBorderEdge( edge, region ) {
   }
 }
 
-function dist( p0, p1 ) {
-  return Math.sqrt( Math.pow( p0[ 0 ] - p1[ 0 ], 2 ) + Math.pow( p0[ 1 ] - p1[ 1 ], 2 ) )
-}
 
 
 
@@ -194,7 +200,7 @@ module.exports = function renderable( canvas ) {
 
       // Grab curved noise line
       let value = noise.get( cell.site.x, cell.site.y )
-      value = easeInOut.get( value )  // blend
+      // value = easeInOut.get( value )  // blend
 
       // Add lazy radial gradient distance
       let unit = [
@@ -212,22 +218,46 @@ module.exports = function renderable( canvas ) {
       // value *= Math.abs( .5 + perturb.get( cell.site.x, cell.site.y ) * .5 )
 
       // Add right circular gradient
-      center = [ region.origin[ 0 ] ? 0.0 : 1.0, 0 ]
-      radius = 1.0
-      distance = dist( unit, center )
-      distance *= 1.0 + perturb.get( cell.site.x, cell.site.y ) * .25 // add noise
+      // center = [ region.origin[ 0 ] ? 0.0 : 1.0, 0 ]
+      // radius = 1.0
+      // distance = dist( unit, center )
+      // distance *= 1.0 + perturb.get( cell.site.x, cell.site.y ) * .25 // add noise
+      //
+      // value *= easeOutQuad.get( 1.0 - distance / radius )
+      //
+      // // Add right circular gradient
+      // center = [ region.origin[ 0 ] ? 0.0 : 1.0, 1.0 ]
+      // radius = 1.0
+      // distance = dist( unit, center )
+      // distance *= 1.0 + perturb.get( cell.site.x, cell.site.y ) * .25 // add noise
+      //
+      // value *= easeOutQuad.get( 1.0 - distance / radius )
 
-      value *= easeOutQuad.get( 1.0 - distance / radius )
+      // @TODO each region corner should be marked either land or water,
+      // land corners get an influence, leaving water corners darker
+      // @TODO use an influence map that helps determine water/land mix, any of
+      // number of influences/powers can be specified but cardinal points/center
+      // would be a good starting point
+      let power = .15
+      let influences = [
+        // gradient( [ .5, .5 ], .5, unit ),
+        // gradient( [ 1.0, 0.0 ], power, unit ),
+        // gradient( [ 1.0, 1.0 ], power, unit ),
+        gradient( [ 1.0, .5 ], power, unit ),
+        // gradient( [ .5, 1.0 ], power, unit ),
+        // gradient( [ 0.0, 0.0 ], power, unit ),
+        // gradient( [ 0.0, 1.0 ], power, unit )
+      ]
+      // average influences
+      // let influenceMap = influences.reduce( ( prev, curr ) => prev + curr ) // additive (will blow out whites, should be clamped)
+      // let influenceMap = influences.reduce( ( prev, curr ) => prev + curr ) / influences.length (average, reduces overall power)
+      let influenceMap = clamp( influences.reduce( ( prev, curr ) => prev + curr ), 0, 1 )
+      influenceMap = easeOutQuad.get( influenceMap )
+      influenceMap *= 1.0 + perturb.get( cell.site.x, cell.site.y ) * .5 // add noise
 
-      // Add right circular gradient
-      center = [ region.origin[ 0 ] ? 0.0 : 1.0, 1.0 ]
-      radius = 1.0
-      distance = dist( unit, center )
-      distance *= 1.0 + perturb.get( cell.site.x, cell.site.y ) * .25 // add noise
+      value *= influenceMap
 
-      value *= easeOutQuad.get( 1.0 - distance / radius )
-
-      renderCell( cell, color( clamp( value, 0, 1 ) ) )
+      renderCell( cell, color( value ) )
     }
 
 
