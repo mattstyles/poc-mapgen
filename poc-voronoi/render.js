@@ -148,76 +148,25 @@ module.exports = function renderable( canvas ) {
     for ( let i = 0; i < diagram.cells.length; i++ ) {
       let cell = diagram.cells[ i ]
 
-      // let col = makeColor( [ i * 2, i * 2, i * 2 ], 1 )
-      // let col = color( noise.getEase( cell.site.x, cell.site.y ), 1 )
-      //
-      // if ( cell.isBorder ) {
-      //   col = color( noise.getEase( cell.site.x, cell.site.y ) * .25, 1 )
-      // }
-      //
-      // renderCell( cell, col )
-
-
       // Grab curved noise line
       let value = varying.heightmap.get( cell.site.x, cell.site.y )
       value = easeInOut.get( value )  // blend
 
+      // Normalize x,y to 0...1
       let unit = [
         ( cell.site.x - region.origin[ 0 ] ) / region.dimensions[ 0 ],
         ( cell.site.y - region.origin[ 1 ] ) / region.dimensions[ 1 ]
       ]
 
-      // Add lazy radial gradient distance
-      // let center = [ .5, .5 ]
-      // let radius = .5
-      // let distance = dist( unit, center )
-      // distance *= 1.0 + varying.jitter.get( cell.site.x, cell.site.y ) * .25 // add noise
-
-      // value *= easeOutQuad.get( 1.0 - distance / radius )
-
       // Add perturb ridges
-      // value *= Math.abs( .5 + perturb.get( cell.site.x, cell.site.y ) * .5 )
+      //value *= Math.abs( .5 + varying.random.get( cell.site.x, cell.site.y ) * .5 )
 
-      // Add right circular gradient
-      // center = [ region.origin[ 0 ] ? 0.0 : 1.0, 0 ]
-      // radius = 1.0
-      // distance = dist( unit, center )
-      // distance *= 1.0 + perturb.get( cell.site.x, cell.site.y ) * .25 // add noise
-      //
-      // value *= easeOutQuad.get( 1.0 - distance / radius )
-      //
-      // // Add right circular gradient
-      // center = [ region.origin[ 0 ] ? 0.0 : 1.0, 1.0 ]
-      // radius = 1.0
-      // distance = dist( unit, center )
-      // distance *= 1.0 + perturb.get( cell.site.x, cell.site.y ) * .25 // add noise
-      //
-      // value *= easeOutQuad.get( 1.0 - distance / radius )
-
-      // @TODO each region corner should be marked either land or water,
-      // land corners get an influence, leaving water corners darker
-      // @TODO use an influence map that helps determine water/land mix, any of
-      // number of influences/powers can be specified but cardinal points/center
-      // would be a good starting point
-      // let power = .15
-      // let influences = [
-      //   // gradient( [ .5, .5 ], .5, unit ),
-      //   // gradient( [ 1.0, 0.0 ], power, unit ),
-      //   // gradient( [ 1.0, 1.0 ], power, unit ),
-      //   gradient( [ 1.0, .5 ], power, unit ),
-      //   // gradient( [ .5, 1.0 ], power, unit ),
-      //   // gradient( [ 0.0, 0.0 ], power, unit ),
-      //   // gradient( [ 0.0, 1.0 ], power, unit )
-      // ]
+      // Use circular gradients to calculate influence regions
       let influences = region.influences.map( inf => {
         return gradient( inf.origin, inf.pow, unit )
       })
-      // average influences
-      // let influenceMap = influences.reduce( ( prev, curr ) => prev + curr ) // additive (will blow out whites, should be clamped)
-      // let influenceMap = influences.reduce( ( prev, curr ) => prev + curr ) / influences.length (average, reduces overall power)
+      // average influences and clamp
       let influenceMap = clamp( influences.reduce( ( prev, curr ) => prev + curr ), 0, 1 )
-      influenceMap = easeOutQuad.get( influenceMap )
-      influenceMap *= 1.0 + varying.jitter.get( cell.site.x, cell.site.y ) * .15 // add noise
 
       value *= influenceMap
 
@@ -268,7 +217,7 @@ module.exports = function renderable( canvas ) {
     //   // translate to region coords
     //   let x = region.origin[ 0 ] + inf.origin[ 0 ] * region.dimensions[ 0 ]
     //   let y = region.origin[ 1 ] + inf.origin[ 1 ] * region.dimensions[ 1 ]
-    //   renderCircle( x, y, inf.pow * region.dimensions[ 0 ] * .5, col )
+    //   renderCircle( x, y, inf.pow * region.dimensions[ 0 ] * 1, col )
     // }
 
     // console.log( 'rendering done', performance.now() - start )

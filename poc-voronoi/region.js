@@ -51,6 +51,9 @@ class Region {
       this.origin[ 1 ] + this.dimensions[ 1 ]
     ]
 
+    // @TODO add more per-region differences (i.e. 4x influencer distribution
+    // instead of 3x) and pass through to the generators rather than externally
+    // grabbing an options hash
     this.generate()
   }
 

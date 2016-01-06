@@ -15,8 +15,24 @@ var influenceFn = {
     frequency: 1 / Math.pow( 2, 8 ),
     octaves: 2
   }),
+  gens: [
+    {
+      fn: function( x, y ) {
+        return easeInOutQuad.get( this.noise.get( x, y ) )
+      },
+      weight: .85
+    },
+    {
+      fn: function( x, y ) {
+        return random.get( x, y )
+      },
+      weight: .15
+    }
+  ],
   get: function( x, y ) {
-    return easeInOutQuad.get( this.noise.get( x, y ) )
+    return this.gens.reduce( ( prev, curr ) => {
+      return prev + ( curr.fn.call( this, x, y ) * curr.weight )
+    }, 0 )
   }
 }
 
@@ -29,8 +45,24 @@ var heightmapFn = {
     frequency: 1 / Math.pow( 2, 8 ),
     amplitude: 1
   }),
+  gens: [
+    {
+      fn: function( x, y ) {
+        return easeInOut.get( this.noise.get( x, y ) )
+      },
+      weight: .75
+    },
+    {
+      fn: function( x, y ) {
+        return random.get( x, y )
+      },
+      weight: .25
+    }
+  ],
   get: function( x, y ) {
-    return easeInOut.get( this.noise.get( x, y ) )
+    return this.gens.reduce( ( prev, curr ) => {
+      return prev + ( curr.fn.call( this, x, y ) * curr.weight )
+    }, 0 )
   }
 }
 
@@ -46,6 +78,28 @@ var randFn = {
   }
 }
 
+var random = new Noise({
+  min: 0,
+  max: 1,
+  persistence: 1 / Math.pow( 2, 4 ),
+  frequency: 1 / Math.pow( 2, 4 ) // less frequency (i.e. Math.pow( 2, 6 ) ) will clump together seed site skip omissions
+})
+
+var jitter = new Noise({
+  min: 0,
+  max: 1,
+  persistence: 1 / Math.pow( 2, 2 ),
+  frequency: 1 / Math.pow( 2, 2 )
+})
+
+var perturb = new Noise({
+  min: -1,
+  max: 1,
+  persistence: 1 / Math.pow( 2, 1.25 ),
+  frequency: 1 / Math.pow( 2, 4 )
+})
+
+
 class Options {
   constructor() {
     this.chunkSize = 16
@@ -57,47 +111,19 @@ class Options {
     this.influenceDivisor = 3
     this.influenceRelaxation = .15
     this.influenceDropoff = .45
-    this.influenceMultiplier = .55
+    this.influenceMultiplier = .65
 
     // Noise functions
     // Basic heightmap, should extend over region boundaries to help keep things smooth
-    // this.heightmap = new Noise({
-    //   min: 0,
-    //   max: 1,
-    //   octaves: 4,
-    //   persistence: 1 / Math.pow( 2, 3 ),
-    //   frequency: 1 / Math.pow( 2, 9 ),
-    //   amplitude: 1
-    // })
     this.heightmap = heightmapFn
-    // this.influenceHeightmap = new Noise({
-    //   persistence: 1 / Math.pow( 2, 9 ),
-    //   frequency: 1 / Math.pow( 2, 9 ),
-    //   octaves: 8
-    // })
     this.influenceHeightmap = influenceFn
 
     // Peaks and troughs, used to perturb a value positive or negative
-    this.perturbmap = new Noise({
-      min: -1,
-      max: 1,
-      persistence: 1 / Math.pow( 2, 1.25 ),
-      frequency: 1 / Math.pow( 2, 4 )
-    })
+    this.perturbmap = perturb
     // Random is actually fairly smooth
-    this.random = new Noise({
-      min: 0,
-      max: 1,
-      persistence: 1 / Math.pow( 2, 4 ),
-      frequency: 1 / Math.pow( 2, 4 ) // less frequency (i.e. Math.pow( 2, 6 ) ) will clump together seed site skip omissions
-    })
+    this.random = random
     // Jitter is pretty uniformly distributed and good as a standard number generator
-    this.jitter = new Noise({
-      min: 0,
-      max: 1,
-      persistence: 1 / Math.pow( 2, 2 ),
-      frequency: 1 / Math.pow( 2, 2 )
-    })
+    this.jitter = jitter
 
     this.randFn = randFn
   }
