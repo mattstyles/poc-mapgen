@@ -3,6 +3,7 @@
 
 var clamp = require( 'mathutil' ).clamp
 var lerp = require( 'mathutil' ).lerp
+var C = require( './constants' )
 var Noise = require( './noise' )
 
 var noise = new Noise({
@@ -10,6 +11,12 @@ var noise = new Noise({
   frequency: 1 / Math.pow( 2, 7.5 )
 })
 
+var BORDER_COLORS = [
+  [ 224, 111, 139 ],
+  [ 247, 226, 107 ],
+  [ 163, 206, 39 ],
+  [ 49, 162, 242 ]
+]
 
 var BIOME_COLORS = [
   [ 54, 54, 97 ],
@@ -37,61 +44,174 @@ function makeColor( color, alpha ) {
 
 function color( value, alpha )  {
   // let biome = BIOME_COLORS[ value * BIOME_COLORS.length | 0 ]
-  let biome = getBiome( value )
+  // let biome = getBiome( value )
 
   // biome = biome.map( col => lerp( value, 0, col ) | 0 )
+  // return makeColor( biome, alpha || 1 )
 
-  // let col = [
-  //   clamp( value, 0, 1 ) * 0xff | 0,
-  //   clamp( value, 0, 1 ) * 0xff | 0,
-  //   clamp( value, 0, 1 ) * 0xff | 0
-  // ]
+  let col = [
+    clamp( value, 0, 1 ) * 0xff | 0,
+    clamp( value, 0, 1 ) * 0xff | 0,
+    clamp( value, 0, 1 ) * 0xff | 0
+  ]
 
-  // return makeColor( col, alpha || 1 )
-  return makeColor( biome, alpha || 1 )
+  return makeColor( col, alpha || 1 )
 }
+
+
+/**
+ * Checks if origin is close enough to target, given a variance
+ */
+function close( origin, target, variance ) {
+  variance = variance || 5
+  return ( origin < target + variance ) && ( origin > target - variance )
+}
+
+/**
+ * Checks dimensions and location and returns an edge enum or null
+ * Unfortunately not all border vertices land smack on 0 so we have to do
+ * a little shuffling to check they are close enough
+ */
+function isBorderEdge( edge, region ) {
+  let bounds = [
+    region.origin[ 0 ],
+    region.origin[ 1 ],
+    region.origin[ 0 ] + region.dimensions[ 0 ],
+    region.origin[ 1 ] + region.dimensions[ 1 ],
+  ]
+  // left
+  if ( close( edge.va.x, bounds[ 0 ] ) && close( edge.vb.x, bounds[ 0 ] ) ) {
+    return C.EDGES.LEFT
+  }
+  // right
+  if ( close( edge.va.x, bounds[ 2 ] ) && close( edge.vb.x, bounds[ 2 ] ) ) {
+    return C.EDGES.RIGHT
+  }
+  // top
+  if ( close( edge.va.y, bounds[ 1 ] ) && close( edge.vb.y, bounds[ 1 ] ) ) {
+    return C.EDGES.TOP
+  }
+  // bottom
+  if ( close( edge.va.y, bounds[ 3 ] ) && close( edge.vb.y, bounds[ 3 ] ) ) {
+    return C.EDGES.BOTTOM
+  }
+}
+
+
+
 
 module.exports = function renderable( canvas ) {
 
   var ctx = canvas.getContext( '2d' )
 
+  function renderEdge( edge, col, width ) {
+    col = col || 'rgb( 244, 0, 0 )'
+    ctx.beginPath()
+    ctx.moveTo( edge.va.x, edge.va.y )
+    ctx.lineTo( edge.vb.x, edge.vb.y )
+    ctx.strokeStyle = col
+    ctx.lineWidth = width || 1
+    ctx.stroke()
+  }
+
+  function renderPoint( point, col ) {
+    col = col || 'rgb( 0, 64, 232 )'
+    ctx.fillRect( point.x - 1, point.y - 1, 3, 3 )
+  }
+
+  function renderCell( cell, col ) {
+    col = col || 'rgb( 220, 220, 220 )'
+    let halfedges = cell.halfedges
+    let point = halfedges[ 0 ].getEndpoint()
+    ctx.beginPath()
+    // start path
+    ctx.moveTo( point.x, point.y )
+
+    // iterate path
+    for ( let j = 0; j < halfedges.length; j++ ) {
+      let point = halfedges[ j ].getEndpoint()
+      ctx.lineTo( point.x, point.y )
+    }
+
+    // close polygon
+    ctx.lineTo( point.x, point.y )
+
+    ctx.fillStyle = col
+    ctx.fill()
+
+    // Add stroke or you miss the edges
+    ctx.strokeStyle = col
+    ctx.stroke()
+  }
 
   return function render( region ) {
-    console.log( region )
+    // console.log( region )
     var start = performance.now()
-    console.log( 'rendering' )
+    // console.log( 'rendering' )
 
     var diagram = region.diagram
 
 
-
     // Render cells
     for ( let i = 0; i < diagram.cells.length; i++ ) {
-    // for ( let i = 50; i < 51; i++ ) {
       let cell = diagram.cells[ i ]
-      let halfedges = cell.halfedges
-      let point = halfedges[ 0 ].getEndpoint()
-      ctx.beginPath()
-      ctx.moveTo( point.x, point.y )
-      for ( let j = 0; j < halfedges.length; j++ ) {
-        let point = halfedges[ j ].getEndpoint()
-        ctx.lineTo( point.x, point.y )
-
-        // Render the vertex point
-        // ctx.fillStyle = color( noise.getEase( region.origin[ 0 ] + cell.site.x, region.origin[ 1 ] + cell.site.y ) )
-        // ctx.fillRect( point.x - 2, point.y - 2, 5, 5 )
-      }
-
-      ctx.lineTo( point.x, point.y )
 
       // let col = makeColor( [ i * 2, i * 2, i * 2 ], 1 )
       let col = color( noise.getEase( cell.site.x, cell.site.y ), 1 )
 
-      ctx.fillStyle = col
-      ctx.fill()
-      ctx.strokeStyle = col
-      ctx.stroke()
+      renderCell( cell, col )
+    }
 
+    // Render border edges
+    // for ( let i = 0; i < diagram.edges.length; i++ ) {
+    //   let edge = diagram.edges[ i ]
+    //   if ( !edge.rSite ) {
+    //     // Get which border
+    //     var col
+    //     if ( isBorderEdge( edge, region ) === C.EDGES.LEFT ) {
+    //       col = BORDER_COLORS[ 0 ]
+    //     }
+    //     if ( isBorderEdge( edge, region ) === C.EDGES.RIGHT ) {
+    //       col = BORDER_COLORS[ 2 ]
+    //     }
+    //     if ( isBorderEdge( edge, region ) === C.EDGES.TOP ) {
+    //       col = BORDER_COLORS[ 1 ]
+    //     }
+    //     if ( isBorderEdge( edge, region ) === C.EDGES.BOTTOM ) {
+    //       col = BORDER_COLORS[ 3 ]
+    //     }
+    //
+    //     renderEdge( edge, makeColor( col ), 3 )
+    //   }
+    // }
+
+    // Render border cells
+    for ( let i = 0; i < diagram.edges.length; i++ ) {
+      let edge = diagram.edges[ i ]
+      if ( !edge.rSite ) {
+        // Get which border
+        var col
+        if ( isBorderEdge( edge, region ) === C.EDGES.LEFT ) {
+          col = BORDER_COLORS[ 0 ]
+        }
+        if ( isBorderEdge( edge, region ) === C.EDGES.RIGHT ) {
+          col = BORDER_COLORS[ 2 ]
+        }
+        if ( isBorderEdge( edge, region ) === C.EDGES.TOP ) {
+          col = BORDER_COLORS[ 1 ]
+        }
+        if ( isBorderEdge( edge, region ) === C.EDGES.BOTTOM ) {
+          col = BORDER_COLORS[ 3 ]
+        }
+
+        // renderCell( diagram.cells[ edge.lSite.voronoiId ], makeColor( col ) )
+
+        // Just colour them all darker than their normal colour, simulating a vignette
+        let cell = diagram.cells[ edge.lSite.voronoiId ]
+        col = color( noise.getEase( cell.site.x, cell.site.y ) * .25 )
+
+        renderCell( cell, col )
+      }
     }
 
     // Render vertices
@@ -104,11 +224,7 @@ module.exports = function renderable( canvas ) {
     // Render edges
     // for ( let i = 0; i < diagram.edges.length; i++ ) {
     //   let edge = diagram.edges[ i ]
-    //   ctx.beginPath()
-    //   ctx.moveTo( edge.va.x, edge.va.y )
-    //   ctx.lineTo( edge.vb.x, edge.vb.y )
-    //   ctx.strokeStyle = 'rgb( 230, 230, 242 )'
-    //   ctx.stroke()
+    //   renderEdge( edge, 'rgb( 230, 230, 242 )' )
     // }
 
     // Render initial seed sites
@@ -118,6 +234,6 @@ module.exports = function renderable( canvas ) {
     //   ctx.fillRect( site.x - 1, site.y - 1, 3, 3 )
     // }
 
-    console.log( 'rendering done', performance.now() - start )
+    // console.log( 'rendering done', performance.now() - start )
   }
 }

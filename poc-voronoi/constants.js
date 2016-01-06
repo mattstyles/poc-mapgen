@@ -1,9 +1,15 @@
 
 module.exports = {
-  WORLD_SIZE: [ 768, 768 ],
-  DIVISIONS: 64,
+  WORLD_SIZE: [ 512, 512 ],
+  DIVISIONS: 32,
 
-  SITES_KEY: 'voronoi_sites'
+  SITES_KEY: 'voronoi_sites',
+  EDGES: {
+    LEFT: 'left',
+    RIGHT: 'right',
+    TOP: 'top',
+    BOTTOM: 'bottom'
+  }
 }
 
 
