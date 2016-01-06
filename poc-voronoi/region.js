@@ -12,28 +12,10 @@ var Seedmap = require( './seedmap' )
 var InfluenceMap = require( './influencemap' )
 var C = require( './constants' )
 var clamp = require( 'mathutil' ).clamp
-var Noise = require( './noise' )
-
-var perturbNoise = new Noise({
-  min: -.75,
-  max: .75,
-  amplitude: .05,
-  frequency: .075,
-  octaves: 8,
-  persistence: .4
-})
-
-var rangeNoise = new Noise({
-  min: 0,
-  max: 1,
-  amplitude: 1,
-  frequency: .05,
-  octaves: 4,
-  persistence: .05
-})
 
 var voronoi = new Voronoi()
 
+var varying = require( './options' )
 
 /**
  * Checks if origin is close enough to target, given a variance
@@ -42,6 +24,7 @@ function close( origin, target, variance ) {
   variance = variance || 5
   return ( origin < target + variance ) && ( origin > target - variance )
 }
+
 
 /**
  * Region class
@@ -68,13 +51,7 @@ class Region {
       this.origin[ 1 ] + this.dimensions[ 1 ]
     ]
 
-    this.sites = this.generateSeedMap()
-    this.influences = this.generateInfluenceMap( 3 )
-
-    var start = performance.now()
-    console.log( 'generating voronoi' )
-    this.diagram = this.generateVoronoi()
-    console.log( 'voronoi done', performance.now() - start )
+    this.generate()
   }
 
   /**
@@ -115,8 +92,17 @@ class Region {
    * applied to the overall heightmap
    */
   generateInfluenceMap( divisions ) {
-    let influenceMap = new InfluenceMap( this, divisions )
+    let influenceMap = new InfluenceMap( this, varying.influenceDivisor )
     return influenceMap.generate()
+  }
+
+  /**
+   * Master generate function
+   */
+  generate() {
+    this.sites = this.generateSeedMap()
+    this.influences = this.generateInfluenceMap( 3 )
+    this.diagram = this.generateVoronoi()
   }
 
   /**
@@ -133,7 +119,7 @@ class Region {
     diagram.edges = diagram.edges.map( function( edge ) {
       // left
       if ( close( edge.va.x, this.bounds[ 0 ] ) && close( edge.vb.x, this.bounds[ 0 ] ) ) {
-        // Quick that rSite does not exist for the edge (it wont as its a border)
+        // Quick check that rSite does not exist for the edge (it wont as its a border)
         if ( !edge.rSite ) {
           let cell = diagram.cells[ edge.lSite.voronoiId ]
           cell = addCellBorder( cell, C.EDGES.LEFT )

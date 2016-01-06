@@ -23,19 +23,25 @@ var renderHeightmap = require( './renderHeightmap' )( heightmapCanvas )
 
 var world = new World()
 
-world.generate( 0, 0 )
-world.generate( 1, 0 )
-// world.generate( 0, 1 )
-// world.generate( 1, 1 )
+function generate() {
+  world.generate( 0, 0 )
+  world.generate( 1, 0 )
+  world.generate( 0, 1 )
+  world.generate( 1, 1 )
+}
 
 
 function render() {
   iterate( world.regions, renderRegion )
 }
 
+generate()
 render()
 
 window.world = world
-window.renderHeightmap = renderHeightmap //eg renderHeightmap({x:0,y:0,width:800,height:400})
+window.renderHeightmap = renderHeightmap //eg renderHeightmap({x:0,y:0,width:400,height:400,noise:varying.random})
 window.render = render
+window.generate = generate
 window.Noise = require( './noise' )
+window.C = C
+window.varying = require( './options' )

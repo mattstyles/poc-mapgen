@@ -1,5 +1,5 @@
 
-var chunkSize = 16
+var chunkSize = 128
 var worldSize = 512
 
 module.exports = {
@@ -15,7 +15,3 @@ module.exports = {
     BOTTOM: 'bottom'
   }
 }
-
-
-// [ 400, 400 ] with 32 subdivisions gives an avg area of ~230,
-// which is roughly 15x15, a good chunk size

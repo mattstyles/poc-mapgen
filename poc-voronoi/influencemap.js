@@ -2,31 +2,20 @@
 'use strict';
 
 var clamp = require( 'mathutil' ).clamp
-var Noise = require( './noise' )
+var varying = require( './options' )
 
-var perturbNoise = new Noise({
-  min: -.15,
-  max: .15,
-  amplitude: .05,
-  frequency: .075,
-  octaves: 8,
-  persistence: .4
-})
-
-var rangeNoise = new Noise({
-  min: 0,
-  max: 1,
-  amplitude: 1,
-  frequency: .05,
-  octaves: 4,
-  persistence: .05
-})
-
-// 50/50 land/water, this will be clamped
-var influenceNoise = new Noise({
-  min: .5,
-  max: .5
-})
+/**
+ * Provides a shelf drop-off, influence lights are either on (say .5 to 1) or off,
+ * lights at .2 and .3 arent much help
+ */
+function getInfluence( x, y ) {
+  // let pow = influenceNoise.get( x, y )
+  let pow = varying.heightmap.get( x, y )
+  if ( pow < varying.influenceDropoff ) {
+    return 0
+  }
+  return pow * varying.influenceMultiplier
+}
 
 var bounds = [ 0, 0, 1, 1 ]
 
@@ -73,7 +62,6 @@ class InfluenceMap {
         let influence = this.generateInfluence( x, y )
         if ( influence ) {
           influences.push( influence )
-          console.log( influence )
         }
       }
     }
@@ -88,11 +76,11 @@ class InfluenceMap {
     ]
 
     let p = [
-      x + perturbNoise.get( d[ 0 ], d[ 1 ] ),
-      y + perturbNoise.get( -d[ 0 ], -d[ 1 ] )
+      x + varying.perturbmap.get( d[ 0 ], d[ 1 ] ) * varying.influenceRelaxation,
+      y + varying.perturbmap.get( -d[ 0 ], -d[ 1 ] ) * varying.influenceRelaxation
     ]
 
-    let power = clamp( influenceNoise.get( d[ 0 ], d[ 1 ] ), 0, 1 )
+    let power = clamp( getInfluence( d[ 0 ], d[ 1 ] ), 0, 1 )
 
     // If corner then just push
     if ( isCorner( x, y ) ) {
@@ -119,9 +107,10 @@ class InfluenceMap {
     }
 
     // If we got here then this is central vertex so perturb away
+    // Central points should have less influence as they cover more points
     return {
       origin: [ p[ 0 ], p[ 1 ] ],
-      pow: power
+      pow: power * .5
     }
   }
 }

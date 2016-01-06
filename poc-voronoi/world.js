@@ -5,18 +5,25 @@ var ndarray = require( 'ndarray' )
 var C = require( './constants' )
 var Region = require( './region' )
 
+var varying = require( './options' )
+
 class World {
   constructor() {
     this.regions = ndarray( new Array( 2 * 2 ), [ 2, 2 ] )
   }
 
   generate( x, y ) {
+    // @TODO check memory
+    if ( this.regions.get( 0, 0 ) ) {
+      delete this.regions.get( 0, 0 )
+    }
+
     let region = new Region({
-      x: x * C.WORLD_SIZE[ 0 ],
-      y: y * C.WORLD_SIZE[ 1 ],
-      width: C.WORLD_SIZE[ 0 ],
-      height: C.WORLD_SIZE[ 1 ],
-      divisions: C.DIVISIONS
+      x: x * varying.worldSize,
+      y: y * varying.worldSize,
+      width: varying.worldSize,
+      height: varying.worldSize,
+      divisions: varying.siteDivisor
     })
 
     // Smooth each edge

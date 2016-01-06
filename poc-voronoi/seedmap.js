@@ -1,26 +1,7 @@
 
 'use strict';
 
-
-var Noise = require( './noise' )
-
-var perturbNoise = new Noise({
-  min: -.75,
-  max: .75,
-  amplitude: .05,
-  frequency: .075,
-  octaves: 8,
-  persistence: .4
-})
-
-var rangeNoise = new Noise({
-  min: 0,
-  max: 1,
-  amplitude: 1,
-  frequency: .05,
-  octaves: 4,
-  persistence: .05
-})
+var varying = require( './options' )
 
 
 /**
@@ -83,8 +64,8 @@ class Edgemap {
 
   generateSite( x, y ) {
     let variance = [
-      this.chunkSize[ 0 ] * perturbNoise.get( x, y ),
-      this.chunkSize[ 1 ] * perturbNoise.get( -x, -y )
+      this.chunkSize[ 0 ] * ( varying.perturbmap.get( x, y ) * varying.siteRelaxation ),
+      this.chunkSize[ 1 ] * ( varying.perturbmap.get( -x, -y ) * varying.siteRelaxation )
     ]
 
     // If corner then just push
@@ -117,7 +98,7 @@ class Edgemap {
     // become inherently larger than others
     // you have to be careful skipping central ones as the edge vertices
     // will be uniform
-    if ( rangeNoise.get( x, y ) < .25 ) {
+    if ( varying.random.get( x, y ) < varying.siteSkip ) {
       console.log( 'skip' )
       return
     }
@@ -162,14 +143,15 @@ class Seedmap extends Edgemap {
 
   generateSite( x, y ) {
     let variance = [
-      this.chunkSize[ 0 ] * perturbNoise.get( x, y ),
-      this.chunkSize[ 1 ] * perturbNoise.get( -x, -y )
+      this.chunkSize[ 0 ] * ( varying.perturbmap.get( x, y ) * varying.siteRelaxation ),
+      this.chunkSize[ 1 ] * ( varying.perturbmap.get( -x, -y ) * varying.siteRelaxation )
     ]
 
     // Skip a few vertices to add variation
-    // if ( rangeNoise.get( x, y ) < .25 ) {
-    //   return
-    // }
+    if ( varying.random.get( x, y ) < varying.siteSkip ) {
+      console.log( 'skip' )
+      return
+    }
 
     return {
       x: x + variance[ 0 ],

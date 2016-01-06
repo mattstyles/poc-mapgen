@@ -4,6 +4,7 @@
 var clamp = require( 'mathutil' ).clamp
 var lerp = require( 'mathutil' ).lerp
 var C = require( './constants' )
+var varying = require( './options' )
 
 var Bezier = require( 'bezier-easing' )
 var easeOutQuad = new Bezier( .55, 1, .55, 1 )
@@ -11,19 +12,6 @@ var easeInQuad = new Bezier( .75, .3, .8, .8 )
 var easeInOutQuad = new Bezier( .8, 0, .7, 1 )
 var easeInOut = new Bezier( .4, 0, .6, 1 )
 
-
-var Noise = require( './noise' )
-var noise = new Noise({
-  persistence: 1 / Math.pow( 2, 2 ),
-  frequency: 1 / Math.pow( 2, 7.5 )
-})
-
-var perturb = new Noise({
-  min: -1,
-  max: 1,
-  persistence: 1 / Math.pow( 2, 2 ),
-  frequency: 1 / Math.pow( 2, 7 )
-})
 
 function dist( p0, p1 ) {
   return Math.sqrt( Math.pow( p0[ 0 ] - p1[ 0 ], 2 ) + Math.pow( p0[ 1 ] - p1[ 1 ], 2 ) )
@@ -171,18 +159,19 @@ module.exports = function renderable( canvas ) {
 
 
       // Grab curved noise line
-      let value = noise.get( cell.site.x, cell.site.y )
-      // value = easeInOut.get( value )  // blend
+      let value = varying.heightmap.get( cell.site.x, cell.site.y )
+      value = easeInOut.get( value )  // blend
 
-      // Add lazy radial gradient distance
       let unit = [
         ( cell.site.x - region.origin[ 0 ] ) / region.dimensions[ 0 ],
         ( cell.site.y - region.origin[ 1 ] ) / region.dimensions[ 1 ]
       ]
-      let center = [ .5, .5 ]
-      let radius = .5
-      let distance = dist( unit, center )
-      distance *= 1.0 + perturb.get( cell.site.x, cell.site.y ) * .25 // add noise
+
+      // Add lazy radial gradient distance
+      // let center = [ .5, .5 ]
+      // let radius = .5
+      // let distance = dist( unit, center )
+      // distance *= 1.0 + varying.jitter.get( cell.site.x, cell.site.y ) * .25 // add noise
 
       // value *= easeOutQuad.get( 1.0 - distance / radius )
 
@@ -228,7 +217,7 @@ module.exports = function renderable( canvas ) {
       // let influenceMap = influences.reduce( ( prev, curr ) => prev + curr ) / influences.length (average, reduces overall power)
       let influenceMap = clamp( influences.reduce( ( prev, curr ) => prev + curr ), 0, 1 )
       influenceMap = easeOutQuad.get( influenceMap )
-      influenceMap *= 1.0 + perturb.get( cell.site.x, cell.site.y ) * .5 // add noise
+      influenceMap *= 1.0 + varying.jitter.get( cell.site.x, cell.site.y ) * .15 // add noise
 
       value *= influenceMap
 
@@ -279,7 +268,7 @@ module.exports = function renderable( canvas ) {
     //   // translate to region coords
     //   let x = region.origin[ 0 ] + inf.origin[ 0 ] * region.dimensions[ 0 ]
     //   let y = region.origin[ 1 ] + inf.origin[ 1 ] * region.dimensions[ 1 ]
-    //   renderCircle( x, y, inf.pow * region.dimensions[ 0 ], col )
+    //   renderCircle( x, y, inf.pow * region.dimensions[ 0 ] * .5, col )
     // }
 
     // console.log( 'rendering done', performance.now() - start )
