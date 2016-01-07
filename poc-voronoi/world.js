@@ -14,8 +14,8 @@ class World {
 
   generate( x, y ) {
     // @TODO check memory
-    if ( this.regions.get( 0, 0 ) ) {
-      delete this.regions.get( 0, 0 )
+    if ( this.regions.get( x, y ) ) {
+      delete this.regions.get( x, y )
     }
 
     let region = new Region({
@@ -45,6 +45,14 @@ class World {
     }
 
     this.regions.set( x, y, region )
+  }
+
+  getCell( x, y ) {
+    let region = [
+      x / varying.worldSize | 0, y / varying.worldSize | 0
+    ]
+    console.log( 'retrieving from region', region[ 0 ], region[ 1 ] )
+    return this.regions.get( region[ 0 ], region[ 1 ] ).getCell( x, y )
   }
 }
 

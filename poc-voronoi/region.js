@@ -208,7 +208,7 @@ class Region {
 
       // Crank out water/ocean tiles - this effectively sets the water line
       // @TODO this shouldnt just override here
-      if ( cell.elevation < .075 ) {
+      if ( cell.elevation < .1 ) {
         cell.biome = C.BIOMES.OCEAN
       }
     }

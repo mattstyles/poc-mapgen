@@ -27,9 +27,9 @@ var world = new World()
 function generate() {
   var start = performance.now()
   world.generate( 0, 0 )
-  // world.generate( 1, 0 )
+  world.generate( 1, 0 )
   // world.generate( 0, 1 )
-  // world.generate( 1, 1 )
+  world.generate( 1, 1 )
   console.log( 'generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color:rgb( 49, 162, 242 )' )
 }
 
@@ -46,13 +46,14 @@ render()
 
 canvas.addEventListener( 'click', event => {
   console.log( '' )
-  console.log( 'only checking region <0,0>' )
-  let cell = world.regions.get( 0, 0 ).getCell( event.x, event.y )
+  // let cell = world.regions.get( 0, 0 ).getCell( event.x, event.y )
+  let cell = world.getCell( event.x, event.y )
   console.log( cell )
   console.log( 'elevation', cell.elevation )
   console.log( 'temperature', cell.temperature )
   console.log( 'moisture', cell.moisture )
   console.log( 'biome %c' + cell.biome.toUpperCase(), 'color:rgb( 68, 137, 26 )' )
+
 })
 
 window.world = world
@@ -62,3 +63,4 @@ window.generate = generate
 window.Noise = require( './noise' )
 window.C = C
 window.varying = require( './options' )
+window.biomes = require( './biomes' )
