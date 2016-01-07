@@ -127,18 +127,19 @@ class Region {
    * using an underlying heightmap and influencemap.
    * Mutates diagram.
    */
-  applyElevationMap( diagram, heightmap, influences ) {
+  applyElevationMap( diagram, heightmap, influencemap ) {
     for ( let i = 0; i < diagram.cells.length; i++ ) {
       let cell = diagram.cells[ i ]
 
       // Grab base elevation level from heightmap
-      let value = this.heightmap.get( [ cell.site.x, cell.site.y ] )
+      let value = heightmap.get( cell.site.x, cell.site.y )
 
       // Add perturb ridges
       // value *= Math.abs( .5 + varying.random.get( cell.site.x, cell.site.y ) * .5 )
 
       // Use circular gradients to calculate influence regions
-      if ( this.influences ) {
+      // Sums all of the influences into 0...1 and modifies value
+      if ( influencemap ) {
         // Normalize x,y to 0...1
         let unit = [
           ( cell.site.x - this.origin[ 0 ] ) / this.dimensions[ 0 ],
@@ -146,17 +147,46 @@ class Region {
         ]
 
         // Clamp gradient to 0 to stop negative numbers from being applied to the average
-        let influences = this.influences.map( inf => {
+        let influences = influencemap.map( inf => {
           // return gradient( inf.origin, inf.pow, unit )
           return clamp( gradient( inf.origin, inf.pow, unit ), 0, 1 )
         })
         // average influences and clamp
-        let influenceMap = clamp( influences.reduce( ( prev, curr ) => prev + curr ), 0, 1 )
+        let influence = clamp( influences.reduce( ( prev, curr ) => prev + curr ), 0, 1 )
 
-        value *= influenceMap
+        value *= influence
       }
 
       cell.elevation = value
+    }
+  }
+
+  /**
+   * Applies the moisture map to the cell data
+   */
+  applyMoistureMap( diagram, moisturemap ) {
+    for ( let i = 0; i < diagram.cells.length; i++ ) {
+      let cell = diagram.cells[ i ]
+
+      // For now just use noise, but should probably gather data about neighbours,
+      // the influencemap clamps elevation to 0 for ocean/water tiles.
+      // @TODO there should be no clamping, at the moment there is a dropoff, but
+      // water tiles should still have an elevation, it'll just be under the waterline
+      cell.moisture = moisturemap.get( cell.site.x, cell.site.y )
+    }
+  }
+
+  /**
+   * Applies a temperature map to the cell data
+   */
+  applyTemperatureMap( diagram, tempmap ) {
+    for ( let i = 0; i < diagram.cells.length; i++ ) {
+      let cell = diagram.cells[ i ]
+
+      // For now we'll just use elevation to guide temperature, but add a little noise
+      let value = tempmap.get( cell.site.x, cell.site.y )
+      value = clamp( value * varying.jitter.get( cell.site.x, cell.site.y ), 0, 1 )
+      cell.temperature = value
     }
   }
 
@@ -177,15 +207,20 @@ class Region {
     this.diagram = this.generateVoronoi()
     console.log( '  voronoi diagram generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
 
-
-
     // Apply heightmap - could be generated somehow here, using noise functions
     // is probably still better though
     // Ease the basic noisy heightmap for better distribution of landmass
+    // @TODO probably should not mutate the underlying heigthmap from the options,
+    // if the heightmap needs easing then do so in the options heightmap. Other sources,
+    // such as individual pixel elevation, should draw from the same place so that
+    // biome elevation becomes a rough indicator of average pixel/tile height.
     this.heightmap = {
       get: function( point ) {
         let value = varying.heightmap.get( point[ 0 ], point[ 1 ] )
-        return easeInOut.get( value )
+        // @TODO should we ease again here? when we get to individual pixel elevation
+        // it would probably make sense to use the heightmap supplied by the options
+        // return easeInOut.get( value )
+        return value
       }
     }
 
@@ -198,8 +233,17 @@ class Region {
     // basins, smooth edges etc etc.
 
     start = performance.now()
-    this.applyElevationMap( this.diagram, this.heightmap, this.influences )
+    this.applyElevationMap( this.diagram, varying.heightmap, this.influences )
     console.log( '  elevation map application time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
+
+    start = performance.now()
+    this.applyMoistureMap( this.diagram, varying.moisturemap )
+    console.log( '  moisture map application time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
+
+    start = performance.now()
+    this.applyTemperatureMap( this.diagram, varying.heightmap )
+    console.log( '  temperature map application time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
+
 
     console.log( '< region generation time: %c' + ( performance.now() - totalstart ).toFixed( 2 ), 'color: ' + col )
   }

@@ -159,10 +159,36 @@ module.exports = function renderable( canvas ) {
     // Render cell elevation map
     for ( let i = 0; i < diagram.cells.length; i++ ) {
       let cell = diagram.cells[ i ]
-
       renderCell( cell, color( cell.elevation ) )
     }
 
+    // Render cell moisture map
+    // @TODO canvas does not like rendering semi-opaque fills and strokes together,
+    // there is a work-around but its messy.
+    for ( let i = 0; i < diagram.cells.length; i++ ) {
+      let cell = diagram.cells[ i ]
+      if ( cell.elevation > 0.05 ) {
+        renderCell( cell, makeColor( [
+          0x22,
+          0x2c,
+          ( .25 + cell.moisture * .75 ) * 0xff | 0
+        ], .5 ))
+      }
+    }
+
+    // Render cell temperature map
+    // @TODO canvas does not like rendering semi-opaque fills and strokes together,
+    // there is a work-around but its messy.
+    for ( let i = 0; i < diagram.cells.length; i++ ) {
+      let cell = diagram.cells[ i ]
+      if ( cell.elevation > 0.05 ) {
+        renderCell( cell, makeColor( [
+          ( .75 + cell.temperature * .25 ) * 0xff | 0,
+          0x6c,
+          0x04
+        ], .5 ))
+      }
+    }
 
     // Render border edges
     // for ( let i = 0; i < diagram.edges.length; i++ ) {
