@@ -39,6 +39,7 @@ set( [ 2, 3 ], [ 3, 3 ], C.BIOMES.TROPICAL_FOREST )
 set( [ 4, 3 ], [ 4, 3 ], C.BIOMES.PLAINS )
 set( [ 5, 3 ], [ 5, 3 ], C.BIOMES.DESERT )
 
+
 class Biomes {
   constructor() {
     this.distribution = biomesDistribution

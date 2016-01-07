@@ -12,11 +12,17 @@ var Seedmap = require( './seedmap' )
 var InfluenceMap = require( './influencemap' )
 var C = require( './constants' )
 var clamp = require( 'mathutil' ).clamp
-var BIOMES = require( './biomes' )
+var biomes = require( './biomes' )
 
 var voronoi = new Voronoi()
 
 var varying = require( './options' )
+
+var Bezier = require( 'bezier-easing' )
+var easeOutQuad = new Bezier( .55, 1, .55, 1 )
+var easeInQuad = new Bezier( .75, .3, .8, .8 )
+var easeInOutQuad = new Bezier( .8, 0, .7, 1 )
+var easeInOut = new Bezier( .4, 0, .6, 1 )
 
 /**
  * Checks if origin is close enough to target, given a variance
@@ -24,6 +30,22 @@ var varying = require( './options' )
 function close( origin, target, variance ) {
   variance = variance || 5
   return ( origin < target + variance ) && ( origin > target - variance )
+}
+
+/**
+ * Basic euclidean distance between points
+ */
+function dist( p0, p1 ) {
+  return Math.sqrt( Math.pow( p0[ 0 ] - p1[ 0 ], 2 ) + Math.pow( p0[ 1 ] - p1[ 1 ], 2 ) )
+}
+
+/**
+ * Get inclusion within a graduated circle
+ */
+function gradient( origin, radius, target ) {
+  // let distance = clamp( dist( origin, target ), 0, 1 )
+  // return clamp( 1.0 - distance / radius, 0, 1 )
+  return 1.0 - dist( origin, target ) / radius
 }
 
 
@@ -101,6 +123,44 @@ class Region {
   }
 
   /**
+   * Applies elevation data to a voronoi diagram
+   * using an underlying heightmap and influencemap.
+   * Mutates diagram.
+   */
+  applyElevationMap( diagram, heightmap, influences ) {
+    for ( let i = 0; i < diagram.cells.length; i++ ) {
+      let cell = diagram.cells[ i ]
+
+      // Grab base elevation level from heightmap
+      let value = this.heightmap.get( [ cell.site.x, cell.site.y ] )
+
+      // Add perturb ridges
+      // value *= Math.abs( .5 + varying.random.get( cell.site.x, cell.site.y ) * .5 )
+
+      // Use circular gradients to calculate influence regions
+      if ( this.influences ) {
+        // Normalize x,y to 0...1
+        let unit = [
+          ( cell.site.x - this.origin[ 0 ] ) / this.dimensions[ 0 ],
+          ( cell.site.y - this.origin[ 1 ] ) / this.dimensions[ 1 ]
+        ]
+
+        // Clamp gradient to 0 to stop negative numbers from being applied to the average
+        let influences = this.influences.map( inf => {
+          // return gradient( inf.origin, inf.pow, unit )
+          return clamp( gradient( inf.origin, inf.pow, unit ), 0, 1 )
+        })
+        // average influences and clamp
+        let influenceMap = clamp( influences.reduce( ( prev, curr ) => prev + curr ), 0, 1 )
+
+        value *= influenceMap
+      }
+
+      cell.elevation = value
+    }
+  }
+
+  /**
    * Master generate function
    */
   generate() {
@@ -117,7 +177,17 @@ class Region {
     this.diagram = this.generateVoronoi()
     console.log( '  voronoi diagram generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
 
-    console.log( '< region generation time: %c' + ( performance.now() - totalstart ).toFixed( 2 ), 'color: ' + col )
+
+
+    // Apply heightmap - could be generated somehow here, using noise functions
+    // is probably still better though
+    // Ease the basic noisy heightmap for better distribution of landmass
+    this.heightmap = {
+      get: function( point ) {
+        let value = varying.heightmap.get( point[ 0 ], point[ 1 ] )
+        return easeInOut.get( value )
+      }
+    }
 
     // @TODO
     // Generate a moisture map, and any other stuff needed before calculating biome distribution
@@ -126,6 +196,12 @@ class Region {
     // currently that'll be a heightmap for elevation, so then the fun can begin of
     // using the voronoi diagram to distribute moisture, or temperature, or flood-fill
     // basins, smooth edges etc etc.
+
+    start = performance.now()
+    this.applyElevationMap( this.diagram, this.heightmap, this.influences )
+    console.log( '  elevation map application time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
+
+    console.log( '< region generation time: %c' + ( performance.now() - totalstart ).toFixed( 2 ), 'color: ' + col )
   }
 
   /**

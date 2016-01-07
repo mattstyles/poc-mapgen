@@ -12,7 +12,7 @@ var childWeighting = new Bezier( .6, .3, .7, .4 ) // For specifying number of ch
  * lights at .2 and .3 arent much help
  */
 function getInfluence( p ) {
-  let pow = varying.influenceHeightmap.get( p[ 0 ], p[ 1 ] )
+  let pow = varying.influencemap.get( p[ 0 ], p[ 1 ] )
   if ( pow < varying.influenceDropoff ) {
     return 0
   }

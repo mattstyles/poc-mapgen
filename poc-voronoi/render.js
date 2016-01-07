@@ -156,35 +156,11 @@ module.exports = function renderable( canvas ) {
     var diagram = region.diagram
 
 
-    // Render cells
+    // Render cell elevation map
     for ( let i = 0; i < diagram.cells.length; i++ ) {
       let cell = diagram.cells[ i ]
 
-      // Grab curved noise line
-      let value = varying.heightmap.get( cell.site.x, cell.site.y )
-      value = easeInOut.get( value )  // blend
-
-      // Normalize x,y to 0...1
-      let unit = [
-        ( cell.site.x - region.origin[ 0 ] ) / region.dimensions[ 0 ],
-        ( cell.site.y - region.origin[ 1 ] ) / region.dimensions[ 1 ]
-      ]
-
-      // Add perturb ridges
-      //value *= Math.abs( .5 + varying.random.get( cell.site.x, cell.site.y ) * .5 )
-
-      // Use circular gradients to calculate influence regions
-      if ( region.influences ) {
-        let influences = region.influences.map( inf => {
-          return gradient( inf.origin, inf.pow, unit )
-        })
-        // average influences and clamp
-        let influenceMap = clamp( influences.reduce( ( prev, curr ) => prev + curr ), 0, 1 )
-
-        value *= influenceMap
-      }
-
-      renderCell( cell, color( value ) )
+      renderCell( cell, color( cell.elevation ) )
     }
 
 
