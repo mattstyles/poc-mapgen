@@ -182,14 +182,14 @@ class InfluenceMap {
    */
   spawnChildren( parent ) {
     let wp = this.getWorldCoords( parent.origin )
-    // Spawn between 0...3 children, heavily weighted towards 0
-    let num = childWeighting.get( varying.jitter.get( wp[ 0 ], wp[ 1 ] ) ) * 4 | 0
-    num = 5
+    // Spawn between 0...3 children, weighted towards 0
+    let num = childWeighting.get( varying.jitter.get( wp[ 0 ], wp[ 1 ] ) ) * ( varying.influenceTailLength + 1 ) | 0
+
     if ( num === 0 ) {
       return []
     }
 
-    console.log( '    spawning influence children', num )
+    console.log( '    spawning influence children %c' + num, 'color: rgb( 178, 220, 239 )' )
     let children = []
 
     // @TODO this works but additional children could loop back on themselves,
