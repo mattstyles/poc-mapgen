@@ -137,7 +137,7 @@ class InfluenceMap {
     sites.push( site )
 
     // If the influencer is active then spawn a tail
-    if ( power > .1  ) {
+    if ( power > 0  ) {
       this.spawnChildren( site ).forEach( child => sites.push( child ) )
     }
 

@@ -25,6 +25,7 @@ module.exports = {
   },
 
   BIOMES: mirror([
+    'OCEAN',
     'SNOW',
     'TUNDRA',
     'SCORCHED',

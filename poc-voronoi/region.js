@@ -117,7 +117,7 @@ class Region {
    * Influences get modelled like circular additive light sources and are
    * applied to the overall heightmap
    */
-  generateInfluenceMap( divisions ) {
+  generateInfluenceMap() {
     let influenceMap = new InfluenceMap( this, varying.influenceDivisor )
     return influenceMap.generate()
   }
@@ -178,6 +178,8 @@ class Region {
 
   /**
    * Applies a temperature map to the cell data
+   * @TODO currently expects elevation data as it is just the inverse of elevation
+   * with a little noise applied
    */
   applyTemperatureMap( diagram, tempmap ) {
     for ( let i = 0; i < diagram.cells.length; i++ ) {
@@ -195,17 +197,37 @@ class Region {
   }
 
   /**
+   * Applies the biome map from elevation, temperature and moisture data
+   * Expects all values to exist in cell data
+   */
+  applyBiomeMap( diagram ) {
+    for ( let i = 0; i < diagram.cells.length; i++ ) {
+      let cell = diagram.cells[ i ]
+
+      cell.biome = biomes.get( cell.moisture, cell.temperature )
+
+      // Crank out water/ocean tiles - this effectively sets the water line
+      // @TODO this shouldnt just override here
+      if ( cell.elevation < .075 ) {
+        cell.biome = C.BIOMES.OCEAN
+      }
+    }
+  }
+
+  /**
    * Master generate function
    */
   generate() {
-    let col = 'rgb( 49, 162, 242 )'
+    let col = 'rgb( 224, 111, 139 )'
     console.log( '> generating region %c<' + this.origin[ 0 ] + ',' + this.origin[ 1 ] + '>', 'color:' + col )
     var totalstart = performance.now()
+
+    col = 'rgb( 49, 162, 242 )'
     var start = performance.now()
     this.sites = this.generateSeedMap()
     console.log( '  seed map generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color:' + col )
     start = performance.now()
-    this.influences = this.generateInfluenceMap( 3 )
+    this.influences = this.generateInfluenceMap()
     console.log( '  influence map generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color:' + col )
     start = performance.now()
     this.diagram = this.generateVoronoi()
@@ -236,6 +258,11 @@ class Region {
     // using the voronoi diagram to distribute moisture, or temperature, or flood-fill
     // basins, smooth edges etc etc.
 
+    // All these applications run over the entire cell array each time, meaning they
+    // can probably be done all at once with just one iteration. Check perf.
+
+    col = 'rgb( 235, 137, 49 )'
+
     start = performance.now()
     this.applyElevationMap( this.diagram, varying.heightmap, this.influences )
     console.log( '  elevation map application time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
@@ -248,8 +275,14 @@ class Region {
     this.applyTemperatureMap( this.diagram, varying.heightmap )
     console.log( '  temperature map application time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
 
+    start = performance.now()
+    this.applyBiomeMap( this.diagram )
+    console.log( '  biome map application time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
 
+
+    col = 'rgb( 224, 111, 139 )'
     console.log( '< region generation time: %c' + ( performance.now() - totalstart ).toFixed( 2 ), 'color: ' + col )
+    console.log( '' )
   }
 
   /**
@@ -454,11 +487,11 @@ class Region {
    * macbook air, region size 512, chunk size 16, ~8 seconds
    * but 512 is pretty big for a region, they can almost certainly be done smaller
    * and stitched together afterwards and they should be done is spawned processes
-   * to keep the main thread clear anyway.
+   * to keep the main thread clear anyway. This rough test is pre-optimisation.
    *
    * This is a slow way though, encoding various bits of cell data into a texture
    * and then reading the pixel data would probably be quicker, using canvas
-   * requires a DOM though which could be problematic. 
+   * requires a DOM though which could be problematic.
    */
   createTexture() {
     console.warn( 'here goes, could take a bit of time' )

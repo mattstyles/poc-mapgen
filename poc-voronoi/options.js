@@ -17,17 +17,22 @@ var query = qs.parse( window.location.search.replace( /^\?/, '' ) )
 var seed = query.seed || require( './package.json' ).name
 
 
-var influenceFn = {
+// @TODO pretty sure there are quicker ways to implement these functions, they
+// dont appear to be very fast
+var heightmapFn = {
   noise: new Noise({
-    persistence: 1 / Math.pow( 2, 9 ),
+    min: 0,
+    max: 1,
+    octaves: 4,
+    persistence: 1 / Math.pow( 2, 2 ),
     frequency: 1 / Math.pow( 2, 8 ),
-    octaves: 2,
+    amplitude: 1,
     random: new PRNG( seed )
   }),
   gens: [
     {
       fn: function( x, y ) {
-        return easeInOutQuad.get( this.noise.get( x, y ) )
+        return easeInOut.get( this.noise.get( x, y ) )
       },
       weight: .85
     },
@@ -45,22 +50,20 @@ var influenceFn = {
   }
 }
 
-// @TODO pretty sure there are quicker ways to implement these functions, they
-// dont appear to be very fast
-var heightmapFn = {
+/**
+ * should match heightmap frequency so they are linked
+ */
+var influenceFn = {
   noise: new Noise({
-    min: 0,
-    max: 1,
-    octaves: 4,
-    persistence: 1 / Math.pow( 2, 2 ),
+    persistence: 1 / Math.pow( 2, 9 ),
     frequency: 1 / Math.pow( 2, 8 ),
-    amplitude: 1,
+    octaves: 2,
     random: new PRNG( seed )
   }),
   gens: [
     {
       fn: function( x, y ) {
-        return easeInOut.get( this.noise.get( x, y ) )
+        return easeInOutQuad.get( this.noise.get( x, y ) )
       },
       weight: .85
     },
@@ -160,8 +163,8 @@ class Options {
     this.siteRelaxation = .75
 
     this.influenceDivisor = 3
-    this.influenceRelaxation = .15
-    this.influenceDropoff = .25
+    this.influenceRelaxation = .25
+    this.influenceDropoff = .15
     this.influenceMultiplier = .75    // too high and influences can _bleed_ out of regions, linked to frequency of influencers though
     this.influenceTailLength = 3
     this.influenceTailReducer = .6  // Usually <1 but higher, so the tail grows, can get interesting

@@ -38,23 +38,25 @@ var BORDER_COLORS = [
   [ 49, 162, 242 ]
 ]
 
-var BIOME_COLORS = [
-  [ 54, 54, 97 ],
-  [ 196, 212, 170 ],
-  [ 169, 204, 164 ]
-]
+var BIOME_COLORS = {
+  'OCEAN': [ 48, 52, 109 ],
+  'SNOW': [ 222, 238, 214 ],
+  'TUNDRA': [ 218, 212, 164 ],
+  'SCORCHED': [ 218, 183, 255 ],
+  'TAIGA': [ 133, 141, 165 ],
+  'SHRUBLAND': [ 109, 107, 44 ],
+  'TEMPERATE_DESERT': [ 200, 194, 82 ],
+  'TEMPERATE_RAINFOREST': [ 52, 131, 96 ],
+  'TEMPERATE_FOREST': [ 52, 101, 36 ],
+  'GRASSLAND': [ 110, 170, 62 ],
+  'DESERT': [ 232, 212, 94 ],
+  'TROPICAL_RAINFOREST': [ 92, 162, 125 ],
+  'PLAINS': [ 162, 192, 62 ],
+  'TROPICAL_FOREST': [ 102, 204, 144 ]
+}
 
-function getBiome( value ) {
-  if ( value >= 0 && value < .05 ) {
-    return BIOME_COLORS[ 0 ]
-  }
-  if ( value >= .05 && value <= .75 ) {
-    return BIOME_COLORS[ 1 ]
-  }
-  if ( value >= .75 && value <= 1 ) {
-    return BIOME_COLORS[ 2 ]
-  }
-  throw new Error( 'nope, colour should never hit here' )
+function applyAlpha( color, alpha ) {
+  return color.map( c => c * alpha | 0 )
 }
 
 function makeColor( color, alpha ) {
@@ -63,12 +65,6 @@ function makeColor( color, alpha ) {
 }
 
 function color( value, alpha )  {
-  // let biome = BIOME_COLORS[ value * BIOME_COLORS.length | 0 ]
-  // let biome = getBiome( value )
-  //
-  // biome = biome.map( col => lerp( value, 0, col ) | 0 )
-  // return makeColor( biome, alpha || 1 )
-
   let col = [
     clamp( value, 0, 1 ) * 0xff | 0,
     clamp( value, 0, 1 ) * 0xff | 0,
@@ -157,9 +153,16 @@ module.exports = function renderable( canvas ) {
 
 
     // Render cell elevation map
+    // for ( let i = 0; i < diagram.cells.length; i++ ) {
+    //   let cell = diagram.cells[ i ]
+    //   renderCell( cell, color( cell.elevation ) )
+    // }
+
+    // Render biome map
     for ( let i = 0; i < diagram.cells.length; i++ ) {
       let cell = diagram.cells[ i ]
-      renderCell( cell, color( cell.elevation ) )
+      let col = BIOME_COLORS[ cell.biome.toUpperCase() ]
+      renderCell( cell, makeColor( applyAlpha( col, .5 + cell.elevation * .5 ) ) )
     }
 
     // Render cell moisture map

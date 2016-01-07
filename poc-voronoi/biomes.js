@@ -45,6 +45,13 @@ class Biomes {
     this.distribution = biomesDistribution
   }
 
+  /**
+   * Expects temp and moisture as 0...1
+   */
+  get( moisture, temperature ) {
+    return this.distribution.get( moisture * 6 | 0, temperature * 4 | 0 )
+  }
+
   log() {
     for ( let y = 0; y < biomes.shape[ 1 ]; y++ ) {
       var row = []
