@@ -1,6 +1,15 @@
 
+'use strict';
+
 var chunkSize = 128
 var worldSize = 512
+
+
+function mirror( arr ) {
+  let output = {}
+  arr.forEach( item => output[ item.toUpperCase() ] = item.toLowerCase() )
+  return output
+}
 
 module.exports = {
   CHUNK_SIZE: chunkSize,
@@ -13,5 +22,22 @@ module.exports = {
     RIGHT: 'right',
     TOP: 'top',
     BOTTOM: 'bottom'
-  }
+  },
+
+  BIOMES: mirror([
+    'SNOW',
+    'TUNDRA',
+    'SCORCHED',
+    'TAIGA',
+    'SHRUBLAND',
+    'TEMPERATE_DESERT',
+    'TEMPERATE_RAINFOREST',
+    'TEMPERATE_FOREST',
+    'GRASSLAND',
+    'DESERT',
+    'TROPICAL_RAINFOREST',
+    'PLAINS',
+    'TROPICAL_FOREST'
+  ])
+
 }

@@ -12,6 +12,7 @@ var Seedmap = require( './seedmap' )
 var InfluenceMap = require( './influencemap' )
 var C = require( './constants' )
 var clamp = require( 'mathutil' ).clamp
+var BIOMES = require( './biomes' )
 
 var voronoi = new Voronoi()
 
@@ -117,6 +118,14 @@ class Region {
     console.log( '  voronoi diagram generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
 
     console.log( '< region generation time: %c' + ( performance.now() - totalstart ).toFixed( 2 ), 'color: ' + col )
+
+    // @TODO
+    // Generate a moisture map, and any other stuff needed before calculating biome distribution
+    // Calc biomes. Biome shape is held in the voronoi diagram.
+    // Use colouration code in the render stuff to generate a base value for each cell/biome,
+    // currently that'll be a heightmap for elevation, so then the fun can begin of
+    // using the voronoi diagram to distribute moisture, or temperature, or flood-fill
+    // basins, smooth edges etc etc.
   }
 
   /**
