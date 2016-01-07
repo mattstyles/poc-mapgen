@@ -17,6 +17,7 @@ var renderRegion = require( './render' )( canvas )
 var heightmapCanvas = document.createElement( 'canvas' )
 document.body.appendChild( heightmapCanvas )
 heightmapCanvas.setAttribute( 'id', 'heightmap' )
+heightmapCanvas.style.display = 'none'
 fit( heightmapCanvas )
 var renderHeightmap = require( './renderHeightmap' )( heightmapCanvas )
 
@@ -41,6 +42,12 @@ function render() {
 
 generate()
 render()
+
+
+canvas.addEventListener( 'click', event => {
+  console.log( 'only checking region <0,0>' )
+  console.log( world.regions.get( 0, 0 ).getCell( event.x, event.y ) )
+})
 
 window.world = world
 window.renderHeightmap = renderHeightmap //eg renderHeightmap({x:0,y:0,width:400,height:400,noise:varying.random})

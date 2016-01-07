@@ -184,8 +184,12 @@ class Region {
       let cell = diagram.cells[ i ]
 
       // For now we'll just use elevation to guide temperature, but add a little noise
-      let value = tempmap.get( cell.site.x, cell.site.y )
-      value = clamp( value * varying.jitter.get( cell.site.x, cell.site.y ), 0, 1 )
+      // let value = tempmap.get( cell.site.x, cell.site.y )
+      // value = clamp( value * varying.jitter.get( cell.site.x, cell.site.y ), 0, 1 )
+      // cell.temperature = 1.0 - value
+
+      let value = 1.0 - cell.elevation
+      value = clamp( value * ( .9 + varying.jitter.get( cell.site.x, cell.site.y ) * .15 ), 0, 1 )
       cell.temperature = value
     }
   }
@@ -253,9 +257,10 @@ class Region {
    */
   calculateBorders( diagram ) {
     function addCellBorder( cell, edge ) {
-      return Object.assign( cell, {
-        isBorder: edge
-      })
+      // return Object.assign( cell, {
+      //   isBorder: edge
+      // })
+      cell.isBorder = edge
     }
 
     // Calc edges and cells at the same time
@@ -416,6 +421,54 @@ class Region {
       v.y = target.y
     })
 
+  }
+
+  /**
+   * Iterates over every cell to find the cell that contains the point
+   * @TODO what happens when a point is on the edge of a cell? For now just
+   * return the first edge cell encountered
+   * @returns <Cell || null>
+   */
+  getCell( x, y ) {
+    // var start = performance.now()
+    var cells = this.diagram.cells
+    var target = null
+    var i = 0
+    while( !target && i < cells.length ) {
+      if ( cells[ i ].pointIntersection( x, y ) >= 0 ) {
+        target = cells[ i ]
+      }
+      i++
+    }
+    // console.log( 'target found: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: rgb( 224, 111, 139 )' )
+    return target
+  }
+
+
+  /**
+   * @TODO
+   * need to work out a performant way of doing this
+   * per-pixel needs to grab the biome that a pixel refers to, this requires
+   * searching through all cells for each pixel. yuck. there must be a better way.
+   *
+   * macbook air, region size 512, chunk size 16, ~8 seconds
+   * but 512 is pretty big for a region, they can almost certainly be done smaller
+   * and stitched together afterwards and they should be done is spawned processes
+   * to keep the main thread clear anyway.
+   *
+   * This is a slow way though, encoding various bits of cell data into a texture
+   * and then reading the pixel data would probably be quicker, using canvas
+   * requires a DOM though which could be problematic. 
+   */
+  createTexture() {
+    console.warn( 'here goes, could take a bit of time' )
+    var start = performance.now()
+    for ( var y = this.bounds[ 1 ]; y < this.bounds[ 3 ]; y++ ) {
+      for ( var x = this.bounds[ 0 ]; x < this.bounds[ 2 ]; x++ ) {
+        this.getCell( x, y )
+      }
+    }
+    console.log( 'iteration time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: rgb( 224, 111, 139 )' )
   }
 }
 
