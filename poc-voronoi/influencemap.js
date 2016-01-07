@@ -184,16 +184,20 @@ class InfluenceMap {
     let wp = this.getWorldCoords( parent.origin )
     // Spawn between 0...3 children, heavily weighted towards 0
     let num = childWeighting.get( varying.jitter.get( wp[ 0 ], wp[ 1 ] ) ) * 4 | 0
-
+    num = 5
     if ( num === 0 ) {
       return []
     }
 
-    console.log( 'spawning influence children', num )
+    console.log( '    spawning influence children', num )
     let children = []
 
+    // @TODO this works but additional children could loop back on themselves,
+    // probably better to use a different way of getting a list of points
+    var previous = null
     for ( var i = 0; i < num; i++ ) {
-      children.push( this.spawnChild( parent ) )
+      previous = this.spawnChild( previous || parent )
+      children.push( previous )
     }
 
     return children

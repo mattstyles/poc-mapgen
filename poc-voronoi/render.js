@@ -235,30 +235,30 @@ module.exports = function renderable( canvas ) {
     // }
 
     // Render child/parent influences
-    // for ( let i = 0; i < region.influences.length; i++ ) {
-    //   let inf = region.influences[ i ]
-    //   // translate to region coords
-    //   let x = region.origin[ 0 ] + inf.origin[ 0 ] * region.dimensions[ 0 ]
-    //   let y = region.origin[ 1 ] + inf.origin[ 1 ] * region.dimensions[ 1 ]
-    //
-    //   if ( inf.parent ) {
-    //     let point = [
-    //       region.origin[ 0 ] + inf.parent[ 0 ] * region.dimensions[ 0 ],
-    //       region.origin[ 1 ] + inf.parent[ 1 ] * region.dimensions[ 1 ]
-    //     ]
-    //     // Render parent and guess area of influence
-    //     renderCircle( point[ 0 ], point[ 1 ], inf.pow * 1.25 * region.dimensions[ 0 ], 'rgba( 220, 50, 0, .5 )'  )
-    //
-    //     // Render child
-    //     renderCircle( x, y, inf.pow * region.dimensions[ 0 ], 'rgba( 255, 0, 0, .25 )')
-    //
-    //     // Render the join
-    //     renderPath([
-    //       [ x, y ],
-    //       point
-    //     ])
-    //   }
-    // }
+    for ( let i = 0; i < region.influences.length; i++ ) {
+      let inf = region.influences[ i ]
+      // translate to region coords
+      let x = region.origin[ 0 ] + inf.origin[ 0 ] * region.dimensions[ 0 ]
+      let y = region.origin[ 1 ] + inf.origin[ 1 ] * region.dimensions[ 1 ]
+
+      if ( inf.parent ) {
+        let point = [
+          region.origin[ 0 ] + inf.parent[ 0 ] * region.dimensions[ 0 ],
+          region.origin[ 1 ] + inf.parent[ 1 ] * region.dimensions[ 1 ]
+        ]
+        // Render parent and guess area of influence
+        renderCircle( point[ 0 ], point[ 1 ], inf.pow * 1.25 * region.dimensions[ 0 ], 'rgba( 220, 50, 0, .5 )'  )
+
+        // Render child
+        renderCircle( x, y, inf.pow * region.dimensions[ 0 ], 'rgba( 255, 0, 0, .25 )')
+
+        // Render the join
+        renderPath([
+          [ x, y ],
+          point
+        ])
+      }
+    }
 
 
     // console.log( 'rendering done', performance.now() - start )
