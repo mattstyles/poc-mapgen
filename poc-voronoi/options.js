@@ -50,13 +50,13 @@ var heightmapFn = {
       fn: function( x, y ) {
         return easeInOut.get( this.noise.get( x, y ) )
       },
-      weight: .75
+      weight: .85
     },
     {
       fn: function( x, y ) {
         return random.get( x, y )
       },
-      weight: .25
+      weight: .15
     }
   ],
   get: function( x, y ) {
@@ -110,8 +110,8 @@ class Options {
 
     this.influenceDivisor = 3
     this.influenceRelaxation = .15
-    this.influenceDropoff = .45
-    this.influenceMultiplier = .65
+    this.influenceDropoff = .25
+    this.influenceMultiplier = .75
 
     // Noise functions
     // Basic heightmap, should extend over region boundaries to help keep things smooth

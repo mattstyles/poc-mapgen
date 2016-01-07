@@ -100,6 +100,18 @@ module.exports = function renderable( canvas ) {
     ctx.fillRect( point.x - 1, point.y - 1, 3, 3 )
   }
 
+  function renderPath( path, col ) {
+    col = col || 'rgb( 20, 220, 120 )'
+    ctx.beginPath()
+    ctx.moveTo( path[ 0 ][ 0 ], path[ 0 ][ 1 ] )
+    path.forEach( point => {
+      ctx.lineTo( point[ 0 ], point[ 1 ] )
+    })
+    ctx.strokeStyle = col
+    ctx.lineWidth = 2
+    ctx.stroke()
+  }
+
   function renderCell( cell, col ) {
     col = col || 'rgb( 220, 220, 220 )'
     let halfedges = cell.halfedges
@@ -217,7 +229,20 @@ module.exports = function renderable( canvas ) {
     //   // translate to region coords
     //   let x = region.origin[ 0 ] + inf.origin[ 0 ] * region.dimensions[ 0 ]
     //   let y = region.origin[ 1 ] + inf.origin[ 1 ] * region.dimensions[ 1 ]
-    //   renderCircle( x, y, inf.pow * region.dimensions[ 0 ] * 1, col )
+    //   renderCircle( x, y, inf.pow * region.dimensions[ 0 ] * .5, inf.master ? 'rgb( 240, 120, 20 )' : col )
+    //
+    //   if ( inf.master ) {
+    //     let point = [
+    //       region.origin[ 0 ] + inf.master[ 0 ] * region.dimensions[ 0 ],
+    //       region.origin[ 1 ] + inf.master[ 1 ] * region.dimensions[ 1 ]
+    //     ]
+    //     renderCircle( point[ 0 ], point[ 1 ], 3, 'rgb( 255, 0, 0 )'  )
+    //
+    //     renderPath([
+    //       [ x, y ],
+    //       point
+    //     ])
+    //   }
     // }
 
     // console.log( 'rendering done', performance.now() - start )
