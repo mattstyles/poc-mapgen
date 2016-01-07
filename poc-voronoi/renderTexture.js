@@ -49,7 +49,7 @@ function within( value, min, max ) {
   return ( value > min ) && ( value < max )
 }
 
-const TOLERANCE = 30
+const TOLERANCE = 10
 
 // Use tolerance to try and find the most likely biome colour
 function findBiome( color ) {
@@ -67,9 +67,9 @@ function findBiome( color ) {
 
     // If the colours match then return the map key as it is the biome id we're after
     if ( test ) {
-      // return col.value[ 0 ]
+      return col.value[ 0 ]
       // Actually, return the index and pack that as an id into the ndarray
-      return count
+      // return count
     }
     col = values.next()
     count++
@@ -101,7 +101,10 @@ function dummyRenderTextureArray( tex ) {
 
   for ( var x = 0; x < tex.shape[ 0 ]; x++ ) {
     for ( var y = 0; y < tex.shape[ 0 ]; y++ ) {
-      let col = BIOME_COLORS.get( BIOME_ID[ tex.get( x, y ) ] )
+      // let col = BIOME_COLORS.get( BIOME_ID[ tex.get( x, y ) ] )
+      // console.log( BIOME_ID[ tex.get( x, y ) ] )
+      let col = BIOME_COLORS.get( tex.get( x, y ) )
+      // console.log( BIOME_COLORS.get( tex.get( x, y ) ) )
       renderPoint( x, y, makeColor( col ) )
     }
   }
@@ -119,7 +122,11 @@ module.exports = function renderToTexture( region ) {
   canvas.setAttribute( 'id', 'imagePack' )
   let ctx = canvas.getContext( '2d' )
 
+  // Antialising line drawing and fills doesnt seem to work very well
   ctx.imageSmoothingEnabled = false
+
+  // Try small translate to nuke antialiasing
+  ctx.translate( .5, .5 )
 
   /**
    * Renders a cell into the context
