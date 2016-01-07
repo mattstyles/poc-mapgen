@@ -103,9 +103,20 @@ class Region {
    * Master generate function
    */
   generate() {
+    let col = 'rgb( 49, 162, 242 )'
+    console.log( '> generating region %c<' + this.origin[ 0 ] + ',' + this.origin[ 1 ] + '>', 'color:' + col )
+    var totalstart = performance.now()
+    var start = performance.now()
     this.sites = this.generateSeedMap()
+    console.log( '  seed map generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color:' + col )
+    start = performance.now()
     this.influences = this.generateInfluenceMap( 3 )
+    console.log( '  influence map generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color:' + col )
+    start = performance.now()
     this.diagram = this.generateVoronoi()
+    console.log( '  voronoi diagram generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
+
+    console.log( '< region generation time: %c' + ( performance.now() - totalstart ).toFixed( 2 ), 'color: ' + col )
   }
 
   /**

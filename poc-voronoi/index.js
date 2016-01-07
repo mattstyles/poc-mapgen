@@ -26,15 +26,17 @@ var world = new World()
 function generate() {
   var start = performance.now()
   world.generate( 0, 0 )
-  // world.generate( 1, 0 )
-  // world.generate( 0, 1 )
-  // world.generate( 1, 1 )
-  console.log( 'generation time: %c' + ( performance.now() - start ), 'color:rgb( 49, 162, 242 )' )
+  world.generate( 1, 0 )
+  world.generate( 0, 1 )
+  world.generate( 1, 1 )
+  console.log( 'generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color:rgb( 49, 162, 242 )' )
 }
 
 
 function render() {
+  var start = performance.now()
   iterate( world.regions, renderRegion )
+  console.log( 'render time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: rgb( 163, 206, 39 )' )
 }
 
 generate()

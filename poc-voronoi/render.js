@@ -174,13 +174,15 @@ module.exports = function renderable( canvas ) {
       //value *= Math.abs( .5 + varying.random.get( cell.site.x, cell.site.y ) * .5 )
 
       // Use circular gradients to calculate influence regions
-      let influences = region.influences.map( inf => {
-        return gradient( inf.origin, inf.pow, unit )
-      })
-      // average influences and clamp
-      let influenceMap = clamp( influences.reduce( ( prev, curr ) => prev + curr ), 0, 1 )
+      if ( region.influences ) {
+        let influences = region.influences.map( inf => {
+          return gradient( inf.origin, inf.pow, unit )
+        })
+        // average influences and clamp
+        let influenceMap = clamp( influences.reduce( ( prev, curr ) => prev + curr ), 0, 1 )
 
-      value *= influenceMap
+        value *= influenceMap
+      }
 
       renderCell( cell, color( value ) )
     }
@@ -222,28 +224,42 @@ module.exports = function renderable( canvas ) {
     //   ctx.fillRect( site.x - 1, site.y - 1, 3, 3 )
     // }
 
-    // Render influences
-    // var col = 'rgba( 247, 206, 128, .75 )'
+    // Render all influences
+    // var col = 'rgba( 247, 206, 128, .5 )'
     // for ( let i = 0; i < region.influences.length; i++ ) {
     //   let inf = region.influences[ i ]
     //   // translate to region coords
     //   let x = region.origin[ 0 ] + inf.origin[ 0 ] * region.dimensions[ 0 ]
     //   let y = region.origin[ 1 ] + inf.origin[ 1 ] * region.dimensions[ 1 ]
-    //   renderCircle( x, y, inf.pow * region.dimensions[ 0 ] * .5, inf.master ? 'rgb( 240, 120, 20 )' : col )
+    //   renderCircle( x, y, inf.pow * region.dimensions[ 0 ] * 1, col ) // reduce 1 to reduce circle size
+    // }
+
+    // Render child/parent influences
+    // for ( let i = 0; i < region.influences.length; i++ ) {
+    //   let inf = region.influences[ i ]
+    //   // translate to region coords
+    //   let x = region.origin[ 0 ] + inf.origin[ 0 ] * region.dimensions[ 0 ]
+    //   let y = region.origin[ 1 ] + inf.origin[ 1 ] * region.dimensions[ 1 ]
     //
-    //   if ( inf.master ) {
+    //   if ( inf.parent ) {
     //     let point = [
-    //       region.origin[ 0 ] + inf.master[ 0 ] * region.dimensions[ 0 ],
-    //       region.origin[ 1 ] + inf.master[ 1 ] * region.dimensions[ 1 ]
+    //       region.origin[ 0 ] + inf.parent[ 0 ] * region.dimensions[ 0 ],
+    //       region.origin[ 1 ] + inf.parent[ 1 ] * region.dimensions[ 1 ]
     //     ]
-    //     renderCircle( point[ 0 ], point[ 1 ], 3, 'rgb( 255, 0, 0 )'  )
+    //     // Render parent and guess area of influence
+    //     renderCircle( point[ 0 ], point[ 1 ], inf.pow * 1.25 * region.dimensions[ 0 ], 'rgba( 220, 50, 0, .5 )'  )
     //
+    //     // Render child
+    //     renderCircle( x, y, inf.pow * region.dimensions[ 0 ], 'rgba( 255, 0, 0, .25 )')
+    //
+    //     // Render the join
     //     renderPath([
     //       [ x, y ],
     //       point
     //     ])
     //   }
     // }
+
 
     // console.log( 'rendering done', performance.now() - start )
   }

@@ -111,7 +111,7 @@ class Options {
     this.influenceDivisor = 3
     this.influenceRelaxation = .15
     this.influenceDropoff = .25
-    this.influenceMultiplier = .75
+    this.influenceMultiplier = .75    // too high and influences can _bleed_ out of regions, linked to frequency of influencers though
 
     // Noise functions
     // Basic heightmap, should extend over region boundaries to help keep things smooth
