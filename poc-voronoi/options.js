@@ -113,6 +113,8 @@ class Options {
     this.influenceDropoff = .25
     this.influenceMultiplier = .75    // too high and influences can _bleed_ out of regions, linked to frequency of influencers though
     this.influenceTailLength = 3
+    this.influenceTailReducer = .6  // Usually <1 but higher, so the tail grows, can get interesting
+    this.influenceTailReducerVariation = .2
 
     // Noise functions
     // Basic heightmap, should extend over region boundaries to help keep things smooth

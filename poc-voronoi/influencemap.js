@@ -167,8 +167,8 @@ class InfluenceMap {
     p[ 0 ] = clamp( p[ 0 ], .15, .85 )
     p[ 1 ] = clamp( p[ 1 ], .15, .85 )
 
-    // Reduce power to 40-80%
-    let power = parent.pow * ( .6 + varying.jitter.get( wp[ 0 ], wp[ 1 ] ) * .2 )
+    // Reduce power to based on parameter range (i.e. 40%-60%)
+    let power = parent.pow * ( varying.influenceTailReducer + varying.jitter.get( wp[ 0 ], wp[ 1 ] ) * varying.influenceTailReducerVariation )
 
     return {
       origin: p,
@@ -182,7 +182,7 @@ class InfluenceMap {
    */
   spawnChildren( parent ) {
     let wp = this.getWorldCoords( parent.origin )
-    // Spawn between 0...3 children, weighted towards 0
+    // Spawn between 0...tailLength children, weighted towards 0
     let num = childWeighting.get( varying.jitter.get( wp[ 0 ], wp[ 1 ] ) ) * ( varying.influenceTailLength + 1 ) | 0
 
     if ( num === 0 ) {
