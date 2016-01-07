@@ -11,6 +11,7 @@ var Voronoi = require( './voronoi' )
 var Seedmap = require( './seedmap' )
 var InfluenceMap = require( './influencemap' )
 var C = require( './constants' )
+var renderToTexture = require( './renderTexture' )
 var clamp = require( 'mathutil' ).clamp
 var biomes = require( './biomes' )
 
@@ -460,9 +461,13 @@ class Region {
    * Iterates over every cell to find the cell that contains the point
    * @TODO what happens when a point is on the edge of a cell? For now just
    * return the first edge cell encountered
+   * @TODO this can not be relied upon, there is an issue with the pointIntersection
+   * code which means that some cell edges get the same start and end point.
+   * This could be fixed but rendering to a texture is probably more reliable.
    * @returns <Cell || null>
    */
   getCell( x, y ) {
+    // console.log( 'region:getCell', x, y )
     // var start = performance.now()
     var cells = this.diagram.cells
     var target = null
@@ -502,6 +507,14 @@ class Region {
       }
     }
     console.log( 'iteration time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: rgb( 224, 111, 139 )' )
+  }
+
+  /**
+   * Renders to a canvas texture and grabs the pixel data.
+   * Relies on a DOM so other methods will be required when we dont have one.
+   */
+  renderToTexture() {
+    return renderToTexture( this )
   }
 }
 

@@ -156,8 +156,8 @@ var perturb = new Noise({
 
 class Options {
   constructor() {
-    this.chunkSize = 16
-    this.worldSize = 512
+    this.chunkSize = 64     // 16
+    this.worldSize = 128    // 512
     this.siteDivisor = this.worldSize / this.chunkSize
     this.siteSkip = 0
     this.siteRelaxation = .75

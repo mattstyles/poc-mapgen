@@ -21,6 +21,16 @@ heightmapCanvas.style.display = 'none'
 fit( heightmapCanvas )
 var renderHeightmap = require( './renderHeightmap' )( heightmapCanvas )
 
+var biomeText = document.createElement( 'div' )
+document.body.appendChild( biomeText )
+Object.assign( biomeText.style, {
+  position: 'absolute',
+  top: '2px',
+  right: '2px',
+  fontFamily: 'Coolville',
+  fontSize: '20px',
+  color: 'rgb( 64, 64, 64)'
+})
 
 var world = new World()
 
@@ -28,7 +38,7 @@ function generate() {
   var start = performance.now()
   world.generate( 0, 0 )
   world.generate( 1, 0 )
-  // world.generate( 0, 1 )
+  world.generate( 0, 1 )
   world.generate( 1, 1 )
   console.log( 'generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color:rgb( 49, 162, 242 )' )
 }
@@ -47,13 +57,27 @@ render()
 canvas.addEventListener( 'click', event => {
   console.log( '' )
   // let cell = world.regions.get( 0, 0 ).getCell( event.x, event.y )
-  let cell = world.getCell( event.x, event.y )
+  let cell = world.getCell( event.x * window.devicePixelRatio, event.y * window.devicePixelRatio )
   console.log( cell )
   console.log( 'elevation', cell.elevation )
   console.log( 'temperature', cell.temperature )
   console.log( 'moisture', cell.moisture )
   console.log( 'biome %c' + cell.biome.toUpperCase(), 'color:rgb( 68, 137, 26 )' )
+})
 
+canvas.addEventListener( 'mousemove', event => {
+  let cell = null
+  let x = event.x * window.devicePixelRatio
+  let y = event.y * window.devicePixelRatio
+  try {
+    cell = world.getCell( x, y )
+  } catch ( err ) {
+    biomeText.innerHTML = '[' + x + ', ' + y + ']'
+  }
+
+  if ( cell ) {
+    biomeText.innerHTML = cell.biome + '  [' + x + ', ' + y + ']'
+  }
 })
 
 window.world = world

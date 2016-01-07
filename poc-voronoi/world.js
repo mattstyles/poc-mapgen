@@ -48,11 +48,12 @@ class World {
   }
 
   getCell( x, y ) {
-    let region = [
+    let regionPoint = [
       x / varying.worldSize | 0, y / varying.worldSize | 0
     ]
-    console.log( 'retrieving from region', region[ 0 ], region[ 1 ] )
-    return this.regions.get( region[ 0 ], region[ 1 ] ).getCell( x, y )
+    // console.log( 'retrieving from region', region[ 0 ], region[ 1 ] )
+    let region = this.regions.get( regionPoint[ 0 ], regionPoint[ 1 ] )
+    return region.getCell( x % region.bounds[ 2 ], y % region.bounds[ 3 ] )
   }
 }
 

@@ -40,10 +40,10 @@ var BORDER_COLORS = [
 
 var BIOME_COLORS = {
   'OCEAN': [ 48, 52, 109 ],
-  'SNOW': [ 222, 238, 214 ],
-  'TUNDRA': [ 218, 212, 164 ],
-  'SCORCHED': [ 218, 183, 255 ],
-  'TAIGA': [ 133, 141, 165 ],
+  'SNOW': [ 238, 240, 249 ],
+  'TUNDRA': [ 214, 222, 232 ],
+  'SCORCHED': [ 178, 183, 182 ],
+  'TAIGA': [ 133, 181, 165 ],
   'SHRUBLAND': [ 109, 107, 44 ],
   'TEMPERATE_DESERT': [ 200, 194, 82 ],
   'TEMPERATE_RAINFOREST': [ 52, 131, 96 ],
@@ -111,19 +111,16 @@ module.exports = function renderable( canvas ) {
   function renderCell( cell, col ) {
     col = col || 'rgb( 220, 220, 220 )'
     let halfedges = cell.halfedges
-    let point = halfedges[ 0 ].getEndpoint()
+    let point = halfedges[ 0 ].getStartpoint()
     ctx.beginPath()
     // start path
     ctx.moveTo( point.x, point.y )
 
     // iterate path
-    for ( let j = 0; j < halfedges.length; j++ ) {
-      let point = halfedges[ j ].getEndpoint()
+    for ( let i = 0; i < halfedges.length; i++ ) {
+      let point = halfedges[ i ].getEndpoint()
       ctx.lineTo( point.x, point.y )
     }
-
-    // close polygon
-    ctx.lineTo( point.x, point.y )
 
     ctx.fillStyle = col
     ctx.fill()
