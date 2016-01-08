@@ -83,7 +83,8 @@ var influenceFn = {
 
 /**
  * Should be the same noise attributes (particularly frequency) but a
- * different seed
+ * different seed. Can actually be more interesting with a different
+ * frequency
  */
 var moistureFn = {
   noise: new Noise({
@@ -107,6 +108,48 @@ var moistureFn = {
         return randomNoise.get( x, y )
       },
       weight: .15
+    }
+  ],
+  get: function( x, y ) {
+    return this.gens.reduce( ( prev, curr ) => {
+      return prev + ( curr.fn.call( this, x, y ) * curr.weight )
+    }, 0 )
+  }
+}
+
+/**
+ * Should be the same noise attributes (particularly frequency) but a
+ * different seed. Can actually be more interesting with a different
+ * frequency
+ */
+var temperatureFn = {
+  noise: new Noise({
+    min: 0,
+    max: 1,
+    octaves: 4,
+    persistence: 1 / Math.pow( 2, 2 ),
+    frequency: 1 / Math.pow( 2, 8 ),
+    amplitude: 1,
+    random: new PRNG( seed + 'temp' )
+  }),
+  gens: [
+    {
+      fn: function( x, y ) {
+        return easeInOut.get( this.noise.get( x, y ) )
+      },
+      weight: .15
+    },
+    {
+      fn: function( x, y ) {
+        return 1.0 - heightmapFn.get( x, y )
+      },
+      weight: .75
+    },
+    {
+      fn: function( x, y ) {
+        return randomNoise.get( x, y )
+      },
+      weight: .1
     }
   ],
   get: function( x, y ) {
@@ -156,8 +199,8 @@ var perturb = new Noise({
 
 class Options {
   constructor() {
-    this.chunkSize = 64     // 16
-    this.worldSize = 128    // 512
+    this.chunkSize = 16     // 16
+    this.worldSize = 512    // 512
     this.siteDivisor = this.worldSize / this.chunkSize
     this.siteSkip = 0
     this.siteRelaxation = .75
@@ -175,6 +218,7 @@ class Options {
     this.heightmap = heightmapFn
     this.influencemap = influenceFn
     this.moisturemap = moistureFn
+    this.temperaturemap = temperatureFn
 
     // Peaks and troughs, used to perturb a value positive or negative
     this.perturbmap = perturb

@@ -84,7 +84,7 @@ function makeColor( color, alpha ) {
 }
 
 /**
- * Renders the generated ndarray texture
+ * Renders the generated ndarray texture and dumps to DOM
  */
 function dummyRenderTextureArray( tex ) {
   let canvas = document.createElement( 'canvas' )
@@ -111,6 +111,11 @@ function dummyRenderTextureArray( tex ) {
 }
 
 
+/**
+ * Antialiasing is killing things
+ * When drawing the voronoi diagram the polygons become antialiased which means
+ * unpacking the data back into biome ids is impossible.
+ */
 module.exports = function renderToTexture( region ) {
   if ( !document ) {
     throw new Error( 'Can not find ze DOM' )

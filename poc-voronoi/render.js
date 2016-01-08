@@ -159,7 +159,10 @@ module.exports = function renderable( canvas ) {
     for ( let i = 0; i < diagram.cells.length; i++ ) {
       let cell = diagram.cells[ i ]
       let col = BIOME_COLORS[ cell.biome.toUpperCase() ]
+      // Shade with underlying elevation controlling darkness
       renderCell( cell, makeColor( applyAlpha( col, .5 + cell.elevation * .5 ) ) )
+      // Flat shade biome inclusion
+      // renderCell( cell, makeColor( col ) )
     }
 
     // Render cell moisture map

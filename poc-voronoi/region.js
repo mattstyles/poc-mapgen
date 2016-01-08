@@ -108,6 +108,25 @@ class Region {
 
     diagram = this.calculateBorders( diagram )
 
+    // Kill zero length edges, they appear sometimes and make
+    // pointIntersection fail so fix it here
+    // @TODO nuts, at this stage there are no errors? so its the edge smoothing causing issues
+    // No need to do this if we dont smooth the edges vertices
+    // @TODO if we dont smooth edges we need a better way of specifying the points
+    // that generate the diagram so that the edges match up
+    // diagram.cells = diagram.cells.map( cell => {
+    //   cell.halfedges.forEach( ( edge, index ) => {
+    //     let start = edge.getStartpoint()
+    //     let end = edge.getEndpoint()
+    //     console.log( 'halfedge', start, end )
+    //     if ( ( start.x === end.x ) && ( start.y === end.y ) ) {
+    //       console.error( '0 length edge' )
+    //       cell.halfedges.splice( index, index + 1 )
+    //     }
+    //   })
+    //   return cell
+    // })
+
     return diagram
   }
 
@@ -191,7 +210,8 @@ class Region {
       // value = clamp( value * varying.jitter.get( cell.site.x, cell.site.y ), 0, 1 )
       // cell.temperature = 1.0 - value
 
-      let value = 1.0 - cell.elevation
+      // let value = 1.0 - cell.elevation
+      let value = varying.temperaturemap.get( cell.site.x, cell.site.y )
       value = clamp( value * ( .9 + varying.jitter.get( cell.site.x, cell.site.y ) * .15 ), 0, 1 )
       cell.temperature = value
     }
@@ -391,6 +411,8 @@ class Region {
    * by the object keeping track of regions and their locations
    */
   smoothVertices( edge, region ) {
+    // @TODO smoothing vertices causes problems for pointIntersection tests
+    return
 
     // The strip to match - this already exists and should be considered immutable
     var matchStrip = null
@@ -469,6 +491,20 @@ class Region {
   getCell( x, y ) {
     // console.log( 'region:getCell', x, y )
     // var start = performance.now()
+
+    // @TODO this should not be done here, should be done when
+    // @TODO see note in generateVoronoi
+    // var cells = this.diagram.cells.map( cell => {
+    //   cell.halfedges.forEach( ( he, index ) => {
+    //     let start = he.getStartpoint()
+    //     let end = he.getEndpoint()
+    //     if ( ( start.x === end.x ) && ( start.y === end.y ) ) {
+    //       console.error( '0 length edge' )
+    //       cell.halfedges.splice( index, index + 1 )
+    //     }
+    //   })
+    //   return cell
+    // })
     var cells = this.diagram.cells
     var target = null
     var i = 0
