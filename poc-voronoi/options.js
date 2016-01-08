@@ -24,8 +24,8 @@ var heightmapFn = {
     min: 0,
     max: 1,
     octaves: 4,
-    persistence: 1 / Math.pow( 2, 2 ),
-    frequency: 1 / Math.pow( 2, 8 ),
+    persistence: 1 / Math.pow( 2, 2 ),  // Determines smoothnes of slopes
+    frequency: 1 / Math.pow( 2, 8 ),  // Determines how large an area is high/low
     amplitude: 1,
     random: new PRNG( seed )
   }),
@@ -65,13 +65,13 @@ var influenceFn = {
       fn: function( x, y ) {
         return easeInOutQuad.get( this.noise.get( x, y ) )
       },
-      weight: .85
+      weight: .9
     },
     {
       fn: function( x, y ) {
         return randomNoise.get( x, y )
       },
-      weight: .15
+      weight: .1
     }
   ],
   get: function( x, y ) {
