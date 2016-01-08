@@ -7,9 +7,11 @@
  * Regions hold a collection of voronoi cells/biomes/chunks.
  */
 
+var ndarray = require( 'ndarray' )
 var Voronoi = require( './voronoi' )
 var Seedmap = require( './seedmap' )
 var InfluenceMap = require( './influencemap' )
+// var Quadtree = require( './quadtree' )
 var C = require( './constants' )
 var renderToTexture = require( './renderTexture' )
 var clamp = require( 'mathutil' ).clamp
@@ -143,6 +145,16 @@ class Region {
   }
 
   /**
+   * Generates a quadtree from the cell map
+   * Use bounding box to store cells, then, when retrieving grab all cells associated
+   * with a point and run pointIntersection against just those cells (cells bboxes
+   * will overlap each other)
+   */
+  generateQuadtree() {
+    return new Quadtree( this )
+  }
+
+  /**
    * Applies elevation data to a voronoi diagram
    * using an underlying heightmap and influencemap.
    * Mutates diagram.
@@ -254,30 +266,13 @@ class Region {
     this.diagram = this.generateVoronoi()
     console.log( '  voronoi diagram generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
 
-    // Apply heightmap - could be generated somehow here, using noise functions
-    // is probably still better though
-    // Ease the basic noisy heightmap for better distribution of landmass
-    // @TODO probably should not mutate the underlying heigthmap from the options,
-    // if the heightmap needs easing then do so in the options heightmap. Other sources,
-    // such as individual pixel elevation, should draw from the same place so that
-    // biome elevation becomes a rough indicator of average pixel/tile height.
-    this.heightmap = {
-      get: function( point ) {
-        let value = varying.heightmap.get( point[ 0 ], point[ 1 ] )
-        // @TODO should we ease again here? when we get to individual pixel elevation
-        // it would probably make sense to use the heightmap supplied by the options
-        // return easeInOut.get( value )
-        return value
-      }
-    }
+    // Dont bother with quadtrees, creating the texture by performing pointIntersection
+    // against every cell, which sounds stupid but seems to be quicker than jumping
+    // through quadtree pointers
+    // start = performance.now()
+    // this.celltree = this.generateQuadtree()
+    // console.log( '  voronoi partitioning time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
 
-    // @TODO
-    // Generate a moisture map, and any other stuff needed before calculating biome distribution
-    // Calc biomes. Biome shape is held in the voronoi diagram.
-    // Use colouration code in the render stuff to generate a base value for each cell/biome,
-    // currently that'll be a heightmap for elevation, so then the fun can begin of
-    // using the voronoi diagram to distribute moisture, or temperature, or flood-fill
-    // basins, smooth edges etc etc.
 
     // All these applications run over the entire cell array each time, meaning they
     // can probably be done all at once with just one iteration. Check perf.
@@ -299,6 +294,12 @@ class Region {
     start = performance.now()
     this.applyBiomeMap( this.diagram )
     console.log( '  biome map application time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
+
+
+    col = 'rgb( 68, 137, 26 )'
+    start = performance.now()
+    this.createTexture()
+    console.log( '  pixel map construction time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
 
 
     col = 'rgb( 224, 111, 139 )'
@@ -535,14 +536,30 @@ class Region {
    * requires a DOM though which could be problematic.
    */
   createTexture() {
-    console.warn( 'here goes, could take a bit of time' )
-    var start = performance.now()
+    // console.warn( 'here goes, could take a bit of time' )
+    // var start = performance.now()
+
+    let texture = ndarray([ this.dimensions[ 0 ] * this.dimensions[ 1 ] ], [
+      this.dimensions[ 0 ],
+      this.dimensions[ 1 ]
+    ])
+
     for ( var y = this.bounds[ 1 ]; y < this.bounds[ 3 ]; y++ ) {
       for ( var x = this.bounds[ 0 ]; x < this.bounds[ 2 ]; x++ ) {
-        this.getCell( x, y )
+        // Add per-pixel heightmap data, pretty slow
+        let cell = this.getCell( x, y )
+        texture.set( x, y, {
+          biome: cell.biome,
+          elevation: varying.heightmap.get( x, y ),
+          moisture: varying.moisturemap.get( x, y ),
+          temperature: varying.temperaturemap.get( x, y )
+        })
       }
     }
-    console.log( 'iteration time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: rgb( 224, 111, 139 )' )
+    // console.log( 'iteration time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: rgb( 224, 111, 139 )' )
+
+    this.texture = texture
+    return texture
   }
 
   /**

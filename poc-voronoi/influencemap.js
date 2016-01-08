@@ -189,7 +189,7 @@ class InfluenceMap {
       return []
     }
 
-    console.log( '    spawning influence children %c' + num, 'color: rgb( 178, 220, 239 )' )
+    // console.log( '    spawning influence children %c' + num, 'color: rgb( 178, 220, 239 )' )
     let children = []
 
     // @TODO this works but additional children could loop back on themselves,

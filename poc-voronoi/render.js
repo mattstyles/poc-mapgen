@@ -148,6 +148,20 @@ module.exports = function renderable( canvas ) {
 
     var diagram = region.diagram
 
+    // Render texture map pixel by pixel
+    var texture = region.texture
+    for ( var y = region.bounds[ 0 ]; y < region.bounds[ 2 ]; y++ ) {
+      for ( var x = region.bounds[ 1 ]; x < region.bounds[ 3 ]; x++ ) {
+        let tile = texture.get( x, y )
+        // let biomeCol = BIOME_COLORS[ tile.biome.toUpperCase() ]
+        // let col = makeColor( applyAlpha( biomeCol, tile.elevation ) )
+        // let col = color( tile.elevation )
+        let col = makeColor( applyAlpha( tile.elevation < .35 ? BIOME_COLORS.OCEAN : BIOME_COLORS.PLAINS, tile.elevation ) )
+
+        ctx.fillStyle = col
+        ctx.fillRect( x, y, 1, 1 )
+      }
+    }
 
     // Render cell elevation map
     // for ( let i = 0; i < diagram.cells.length; i++ ) {
@@ -156,14 +170,14 @@ module.exports = function renderable( canvas ) {
     // }
 
     // Render biome map
-    for ( let i = 0; i < diagram.cells.length; i++ ) {
-      let cell = diagram.cells[ i ]
-      let col = BIOME_COLORS[ cell.biome.toUpperCase() ]
-      // Shade with underlying elevation controlling darkness
-      renderCell( cell, makeColor( applyAlpha( col, .5 + cell.elevation * .5 ) ) )
-      // Flat shade biome inclusion
-      // renderCell( cell, makeColor( col ) )
-    }
+    // for ( let i = 0; i < diagram.cells.length; i++ ) {
+    //   let cell = diagram.cells[ i ]
+    //   let col = BIOME_COLORS[ cell.biome.toUpperCase() ]
+    //   // Shade with underlying elevation controlling darkness
+    //   renderCell( cell, makeColor( applyAlpha( col, .5 + cell.elevation * .5 ) ) )
+    //   // Flat shade biome inclusion
+    //   // renderCell( cell, makeColor( col ) )
+    // }
 
     // Render cell moisture map
     // @TODO canvas does not like rendering semi-opaque fills and strokes together,

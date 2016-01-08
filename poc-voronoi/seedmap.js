@@ -25,6 +25,9 @@ function isVerticalEdge( x, y, bounds ) {
 /**
  * Generates a seed map for the voronoi generator
  * Generates edge points
+ * Using an edge map rather than the seedmap (which does not place sites along
+ * borders means that the edges naturally transition better and do not require
+ * something like edge vertex smoothing which throws out pointIntersections)
  */
 class Edgemap {
   constructor( options ) {
@@ -161,4 +164,5 @@ class Seedmap extends Edgemap {
 }
 
 
-module.exports = Seedmap
+// module.exports = Seedmap
+module.exports = Edgemap

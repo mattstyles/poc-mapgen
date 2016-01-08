@@ -34,13 +34,13 @@ var heightmapFn = {
       fn: function( x, y ) {
         return easeInOut.get( this.noise.get( x, y ) )
       },
-      weight: .85
+      weight: .975
     },
     {
       fn: function( x, y ) {
         return randomNoise.get( x, y )
       },
-      weight: .15
+      weight: .025
     }
   ],
   get: function( x, y ) {
@@ -199,8 +199,8 @@ var perturb = new Noise({
 
 class Options {
   constructor() {
-    this.chunkSize = 16     // 16
-    this.worldSize = 512    // 512
+    this.chunkSize = 32     // 16
+    this.worldSize = 256    // 512
     this.siteDivisor = this.worldSize / this.chunkSize
     this.siteSkip = 0
     this.siteRelaxation = .75
