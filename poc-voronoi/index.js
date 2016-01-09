@@ -8,6 +8,7 @@ var C = require( './constants' )
 var Region = require( './region' )
 var World = require( './world' )
 var iterate = require( './iterate' )
+var biomes = require( './biomes' )
 
 var canvas = document.createElement( 'canvas' )
 document.body.appendChild( canvas )
@@ -37,7 +38,7 @@ var world = new World()
 function generate() {
   var start = performance.now()
   world.generate( 0, 0 )
-  // world.generate( 1, 0 )
+  world.generate( 1, 0 )
   // world.generate( 0, 1 )
   // world.generate( 1, 1 )
   console.log( 'generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color:rgb( 49, 162, 242 )' )
@@ -76,7 +77,8 @@ canvas.addEventListener( 'mousemove', event => {
   }
 
   if ( cell ) {
-    biomeText.innerHTML = cell.biome + '  [' + x + ', ' + y + ']'
+    let biome = biomes.get( cell.moisture, cell.temperature )
+    biomeText.innerHTML = biome + '  [' + x + ', ' + y + ']'
   }
 })
 

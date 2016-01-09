@@ -17,6 +17,23 @@ var query = qs.parse( window.location.search.replace( /^\?/, '' ) )
 var seed = query.seed || require( './package.json' ).name
 
 
+/**
+ * Basic euclidean distance between points
+ */
+function dist( p0, p1 ) {
+  return Math.sqrt( Math.pow( p0[ 0 ] - p1[ 0 ], 2 ) + Math.pow( p0[ 1 ] - p1[ 1 ], 2 ) )
+}
+
+/**
+ * Get inclusion within a graduated circle
+ */
+function gradient( origin, radius, target ) {
+  // let distance = clamp( dist( origin, target ), 0, 1 )
+  // return clamp( 1.0 - distance / radius, 0, 1 )
+  return 1.0 - dist( origin, target ) / radius
+}
+
+
 // @TODO pretty sure there are quicker ways to implement these functions, they
 // dont appear to be very fast
 var heightmapFn = {
@@ -29,18 +46,40 @@ var heightmapFn = {
     amplitude: 1,
     random: new PRNG( seed )
   }),
+  perturbnoise: new Noise({
+    min: -1,
+    max: 1,
+    octaves: 4,
+    persistence: 1 / Math.pow( 2, 4 ),
+    frequency: 1 / Math.pow( 2, 8 ),
+    amplitude: 1,
+    random: new PRNG( seed + 'fury' )
+  }),
   gens: [
     {
       fn: function( x, y ) {
-        return easeInOut.get( this.noise.get( x, y ) )
+        // return easeInOut.get( this.noise.get( x, y ) )
+        return this.noise.get( x, y )
       },
-      weight: .975
+      weight: .95
     },
+    // {
+    //   fn: function( x, y ) {
+    //     return Math.abs( this.perturbnoise.get( x, y ) )
+    //   },
+    //   weight: .7
+    // },
+    // {
+    //   fn: function( x, y ) {
+    //     return ( .5 + .5 * Math.sin( x ) ) * .15
+    //   },
+    //   weight: .375
+    // },
     {
       fn: function( x, y ) {
         return randomNoise.get( x, y )
       },
-      weight: .025
+      weight: .05
     }
   ],
   get: function( x, y ) {
@@ -63,15 +102,16 @@ var influenceFn = {
   gens: [
     {
       fn: function( x, y ) {
-        return easeInOutQuad.get( this.noise.get( x, y ) )
+        // return easeInOutQuad.get( this.noise.get( x, y ) )
+        return this.noise.get( x, y )
       },
-      weight: .9
+      weight: .8
     },
     {
       fn: function( x, y ) {
         return randomNoise.get( x, y )
       },
-      weight: .1
+      weight: .2
     }
   ],
   get: function( x, y ) {
@@ -99,7 +139,8 @@ var moistureFn = {
   gens: [
     {
       fn: function( x, y ) {
-        return easeInOut.get( this.noise.get( x, y ) )
+        // return easeInOut.get( this.noise.get( x, y ) )
+        return this.noise.get( x, y )
       },
       weight: .85
     },
@@ -135,7 +176,8 @@ var temperatureFn = {
   gens: [
     {
       fn: function( x, y ) {
-        return easeInOut.get( this.noise.get( x, y ) )
+        // return easeInOut.get( this.noise.get( x, y ) )
+        return this.noise.get( x, y )
       },
       weight: .15
     },
@@ -199,8 +241,8 @@ var perturb = new Noise({
 
 class Options {
   constructor() {
-    this.chunkSize = 32     // 16
-    this.worldSize = 256    // 512
+    this.chunkSize = 16     // 16
+    this.worldSize = 512    // 512
     this.siteDivisor = this.worldSize / this.chunkSize
     this.siteSkip = 0
     this.siteRelaxation = .75

@@ -5,6 +5,7 @@ var clamp = require( 'mathutil' ).clamp
 var lerp = require( 'mathutil' ).lerp
 var C = require( './constants' )
 var varying = require( './options' )
+var biomes = require( './biomes' )
 
 var Bezier = require( 'bezier-easing' )
 var easeOutQuad = new Bezier( .55, 1, .55, 1 )
@@ -150,16 +151,27 @@ module.exports = function renderable( canvas ) {
 
     // Render texture map pixel by pixel
     var texture = region.texture
-    for ( var y = region.bounds[ 0 ]; y < region.bounds[ 2 ]; y++ ) {
-      for ( var x = region.bounds[ 1 ]; x < region.bounds[ 3 ]; x++ ) {
+    var BLOCK_SIZE = 2
+    for ( var y = 0; y < region.dimensions[ 0 ]; y++ ) {
+      for ( var x = 0; x < region.dimensions[ 1 ]; x++ ) {
         let tile = texture.get( x, y )
         // let biomeCol = BIOME_COLORS[ tile.biome.toUpperCase() ]
         // let col = makeColor( applyAlpha( biomeCol, tile.elevation ) )
         // let col = color( tile.elevation )
-        let col = makeColor( applyAlpha( tile.elevation < .35 ? BIOME_COLORS.OCEAN : BIOME_COLORS.PLAINS, tile.elevation ) )
+        // let col = makeColor( tile.elevation < .55 ? BIOME_COLORS.OCEAN : BIOME_COLORS.PLAINS )
+        let biome = BIOME_COLORS[ biomes.get( tile.moisture, tile.temperature ).toUpperCase() ]
+        if ( tile.elevation < .25 ) {
+          biome = BIOME_COLORS.OCEAN
+        }
+        let col = makeColor( biome )
 
         ctx.fillStyle = col
-        ctx.fillRect( x, y, 1, 1 )
+        ctx.fillRect(
+          ( x + region.bounds[ 0 ] ) * BLOCK_SIZE,
+          ( y + region.bounds[ 1 ] ) * BLOCK_SIZE,
+          BLOCK_SIZE,
+          BLOCK_SIZE
+        )
       }
     }
 

@@ -257,14 +257,14 @@ class Region {
 
     col = 'rgb( 49, 162, 242 )'
     var start = performance.now()
-    this.sites = this.generateSeedMap()
-    console.log( '  seed map generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color:' + col )
-    start = performance.now()
-    this.influences = this.generateInfluenceMap()
-    console.log( '  influence map generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color:' + col )
-    start = performance.now()
-    this.diagram = this.generateVoronoi()
-    console.log( '  voronoi diagram generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
+    // this.sites = this.generateSeedMap()
+    // console.log( '  seed map generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color:' + col )
+    // start = performance.now()
+    // this.influences = this.generateInfluenceMap()
+    // console.log( '  influence map generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color:' + col )
+    // start = performance.now()
+    // this.diagram = this.generateVoronoi()
+    // console.log( '  voronoi diagram generation time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
 
     // Dont bother with quadtrees, creating the texture by performing pointIntersection
     // against every cell, which sounds stupid but seems to be quicker than jumping
@@ -279,21 +279,21 @@ class Region {
 
     col = 'rgb( 235, 137, 49 )'
 
-    start = performance.now()
-    this.applyElevationMap( this.diagram, varying.heightmap, this.influences )
-    console.log( '  elevation map application time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
-
-    start = performance.now()
-    this.applyMoistureMap( this.diagram, varying.moisturemap )
-    console.log( '  moisture map application time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
-
-    start = performance.now()
-    this.applyTemperatureMap( this.diagram, varying.heightmap )
-    console.log( '  temperature map application time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
-
-    start = performance.now()
-    this.applyBiomeMap( this.diagram )
-    console.log( '  biome map application time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
+    // start = performance.now()
+    // this.applyElevationMap( this.diagram, varying.heightmap, this.influences )
+    // console.log( '  elevation map application time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
+    //
+    // start = performance.now()
+    // this.applyMoistureMap( this.diagram, varying.moisturemap )
+    // console.log( '  moisture map application time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
+    //
+    // start = performance.now()
+    // this.applyTemperatureMap( this.diagram, varying.heightmap )
+    // console.log( '  temperature map application time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
+    //
+    // start = performance.now()
+    // this.applyBiomeMap( this.diagram )
+    // console.log( '  biome map application time: %c' + ( performance.now() - start ).toFixed( 2 ), 'color: ' + col )
 
 
     col = 'rgb( 68, 137, 26 )'
@@ -493,6 +493,10 @@ class Region {
     // console.log( 'region:getCell', x, y )
     // var start = performance.now()
 
+    if ( this.texture ) {
+      return this.texture.get( x, y )
+    }
+
     // @TODO this should not be done here, should be done when
     // @TODO see note in generateVoronoi
     // var cells = this.diagram.cells.map( cell => {
@@ -544,15 +548,37 @@ class Region {
       this.dimensions[ 1 ]
     ])
 
-    for ( var y = this.bounds[ 1 ]; y < this.bounds[ 3 ]; y++ ) {
-      for ( var x = this.bounds[ 0 ]; x < this.bounds[ 2 ]; x++ ) {
+    // var applyInfluence = function( value, point ) {
+    //   // Normalize x,y to 0...1
+    //   let unit = [
+    //     ( point[ 0 ] - this.origin[ 0 ] ) / this.dimensions[ 0 ],
+    //     ( point[ 1 ] - this.origin[ 1 ] ) / this.dimensions[ 1 ]
+    //   ]
+    //
+    //   // Clamp gradient to 0 to stop negative numbers from being applied to the average
+    //   let influences = this.influences.map( inf => {
+    //     // return gradient( inf.origin, inf.pow, unit )
+    //     return clamp( gradient( inf.origin, inf.pow, unit ), 0, 1 )
+    //   })
+    //   // average influences and clamp
+    //   let influence = clamp( influences.reduce( ( prev, curr ) => prev + curr ), 0, 1 )
+    //
+    //   value *= influence
+    //   return value
+    // }.bind( this )
+
+    var point
+    for ( var y = 0; y < this.dimensions[ 0 ]; y++ ) {
+      for ( var x = 0; x < this.dimensions[ 1 ]; x++ ) {
         // Add per-pixel heightmap data, pretty slow
-        let cell = this.getCell( x, y )
+        // let cell = this.getCell( x, y )
+        point = [ x + this.bounds[ 0 ], y + this.bounds[ 1 ] ]
         texture.set( x, y, {
-          biome: cell.biome,
-          elevation: varying.heightmap.get( x, y ),
-          moisture: varying.moisturemap.get( x, y ),
-          temperature: varying.temperaturemap.get( x, y )
+          // biome: cell.biome,
+          // elevation: applyInfluence( varying.heightmap.get( x, y ), [ x, y ] ),
+          elevation: varying.heightmap.get( point[ 0 ], point[ 1 ] ),
+          moisture: varying.moisturemap.get( point[ 0 ], point[ 1 ] ),
+          temperature: varying.temperaturemap.get( point[ 0 ], point[ 1 ] )
         })
       }
     }
