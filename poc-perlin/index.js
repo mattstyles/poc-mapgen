@@ -3,6 +3,7 @@
 
 var fit = require( 'canvas-fit' )
 var Simplex = require( 'fast-simplex-noise' )
+var Noise = require( 'noisejs' ).Noise
 var Bezier = require( 'bezier-easing' )
 var ndarray = require( 'ndarray' )
 var PRNG = require( 'seedrandom' )  // @TODO massively adds to bundle size, use another
@@ -24,35 +25,68 @@ function gradient( origin, radius, target ) {
   return 1.0 - dist( origin, target ) / radius
 }
 
+var perlin = new Noise( .25 )
 
-const freq = 5.5
+var freq = 7.7
 
-// var noise = new Simplex({
+// Remember to add octaves, otherwise it defaults to 1 which is smooth
 window.noise = new Simplex({
-  min: 0,
+  min: -1,
   max: 1,
+  octaves: 8,
+  persistence: .55,
   frequency: 1 / Math.pow( 2, freq ),
   random: new PRNG( require( './package.json' ).name )
 })
 window.noise2 = new Simplex({
-  min: 0,
+  min: -1,
   max: 1,
-  frequency: 1 / Math.pow( 2, freq - 1 ),
-  random: new PRNG( require( './package.json' ).name  )
+  octaves: 8,
+  persistence: .65,
+  frequency: 1 / Math.pow( 2, freq ),
+  random: new PRNG( require( './package.json' ).name + 'roughness'  )
 })
-const JITTER_AMOUNT = .05
+const JITTER_AMOUNT = .1
 window.jitter = new Simplex({
   min: -1,
   max: 1,
-  frequency: 1 / Math.pow( 2, freq * .55 ),
-  random: new PRNG( require( './package.json' ).name )
+  octaves: 4,
+  frequency: 1 / Math.pow( 2, freq * .15 ),
+  random: new PRNG( require( './package.json' ).name + 'detail' )
 })
 
 // @TODO easing like this is slow
 // var ease = new Bezier( 0, 0, .75, 1 )
-window.ease = new Bezier( .25, 0, .65, 1 )
+// window.ease = new Bezier( .25, 0, .65, 1 )
+
+// 3x^2 - 2x^3
+// much much quicker than calculating the bezier
+window.ease = {
+  get: function( v ) {
+    return v*v*(3 - 2 * v )
+  }
+}
+
+// this produces good looking landmasses and is quicker than the simplex version above,
+// although that is probably just due to less octaves being calculated
+function terrain( x, y ) {
+  var h = perlin.perlin2( x, y )
+  x *= 2.94
+  y *= 2.94
+  h += perlin.perlin2( x, y ) * .4
+  x *= 2.87
+  y *= 2.87
+  h += perlin.perlin2( x, y ) * .15
+  x *= 2.63
+  y *= 2.63
+  h += perlin.perlin2( x, y ) * .075
+  // return Math.pow( h, 2 )
+  return h
+}
 
 var map = ndarray( [ DIMS[ 0 ] * DIMS[ 1 ] ], [ DIMS[ 0 ], DIMS[ 1 ] ] )
+
+var FREQ = 1 / 80
 
 var height = null
 var elevation = null
@@ -63,15 +97,24 @@ function generate() {
   var start = performance.now()
   for ( var y = 0; y < DIMS[ 1 ]; y++ ) {
     for ( var x = 0; x < DIMS[ 0 ]; x++ ) {
-      elevation = noise.get2DNoise( x, y )
-      roughness = noise2.get2DNoise( x, y )
-      detail = jitter.get2DNoise( x, y ) * JITTER_AMOUNT
-      // height = noise.get2DNoise( x, y )
-      // height *= noise2.get2DNoise( x, y ) * .5 + .5
-      // height = ( noise.get2DNoise( x, y ) * .65 ) + ( noise2.get2DNoise( x, y ) * .35 )
+      // elevation = noise.get2DNoise( x, y )
+      // roughness = noise2.get2DNoise( x, y )
+      // detail = jitter.get2DNoise( x, y ) * JITTER_AMOUNT
+      elevation = terrain( x * FREQ, y * FREQ )
+      roughness = terrain( x * FREQ * .95, y * FREQ * .95 )
+      detail = terrain( x * FREQ * 100, y * FREQ * 100 ) * JITTER_AMOUNT
+
       height = ( elevation + ( roughness * detail ) )
+      // height = elevation
+      // height = roughness * detail
+      // height = ease.get( height )
+
+      // height = perlin.perlin2( x * FREQ, y * FREQ )
+      // height = terrain( x * FREQ, y * FREQ )
+
+      height = .5 + .5 * height
       height = ease.get( height )
-      // height += gradient( center, 128, [ x, y ] ) * .65
+
       map.set( x, y, height )
     }
   }
@@ -85,6 +128,14 @@ function render() {
 function go() {
   generate()
   render()
+
+  var low = Number.MAX_SAFE_INTEGER
+  var high = Number.MIN_SAFE_INTEGER
+  map.data.forEach( h => {
+    low = h < low ? h : low
+    high = h > high ? h : high
+  })
+  console.log( 'low', low, 'high', high )
 }
 
 go()
