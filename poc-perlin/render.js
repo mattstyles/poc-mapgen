@@ -2,6 +2,7 @@
 'use strict';
 
 var biomes = require( './biomes' )
+var Quay = require( 'quay' )
 var clamp = require( 'mathutil' ).clamp
 
 var BIOME_COLORS = {
@@ -53,9 +54,10 @@ function step( value, divisions ) {
   return 0
 }
 
-var BLOCK_SIZE = 4
+var BLOCK_SIZE = 32
+var SHOW_SIZE = [ 38, 24 ]
 var WATER_LEVEL = .5
-var HEIGHT_STEP = 30
+var HEIGHT_STEP = 40
 
 module.exports = function renderable( canvas ) {
   var ctx = canvas.getContext( '2d' )
@@ -80,12 +82,19 @@ module.exports = function renderable( canvas ) {
 
   window.sample = sample
 
-  return function render( map ) {
+  var x = 0
+  var y = 0
+
+  function render( map ) {
     var start = performance.now()
-    ctx.clearRect( 0, 0, map.shape[ 0 ] * BLOCK_SIZE, map.shape[ 1 ] * BLOCK_SIZE )
-    for ( var y = 0; y < map.shape[ 1 ]; y++ ) {
-      for ( var x = 0; x < map.shape[ 0 ]; x++ ) {
-        cell = map.get( x, y )
+    // ctx.clearRect( 0, 0, map.shape[ 0 ] * BLOCK_SIZE, map.shape[ 1 ] * BLOCK_SIZE )
+    ctx.clearRect( 0, 0, SHOW_SIZE[ 0 ] * BLOCK_SIZE, SHOW_SIZE[ 1 ] * BLOCK_SIZE )
+
+    // for ( var i = 0; i < map.shape[ 1 ]; i++ ) {
+    //   for ( var j = 0; j < map.shape[ 0 ]; j++ ) {
+    for ( var i = x; i < x + SHOW_SIZE[ 0 ]; i++ ) {
+      for ( var j = y; j < y + SHOW_SIZE[ 1 ]; j++ ) {
+        cell = map.get( i, j )
         height = cell[ 0 ]
         temp = cell[ 1 ]
         moisture = cell[ 2 ]
@@ -109,17 +118,43 @@ module.exports = function renderable( canvas ) {
           biome = BIOME_COLORS.OCEAN
         }
 
-        col = makeColor( applyAlpha( biome, height ) )
-        // col = makeColor( applyAlpha( biome, step( height, HEIGHT_STEP ) ) )
+        // col = makeColor( applyAlpha( biome, height ) )
+        col = makeColor( applyAlpha( biome, step( height, HEIGHT_STEP ) ) )
 
         // test individual cell features
         // col = color( height )
 
 
         ctx.fillStyle = col
-        ctx.fillRect( x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE )
+        ctx.fillRect( ( i - x ) * BLOCK_SIZE, ( j - y ) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE )
       }
     }
-    console.log( 'render done:', performance.now() - start )
+    // console.log( 'render done:', performance.now() - start )
   }
+
+  var quay = new Quay()
+
+  quay.on( '<down>', event => {
+    if ( y >= map.shape[ 1 ] - SHOW_SIZE[ 0 ] ) return
+    y++
+  })
+  quay.on( '<up>', event => {
+    if ( y <= 0 ) return
+    y--
+  })
+  quay.on( '<right>', event => {
+    if ( x >= map.shape[ 0 ] - SHOW_SIZE[ 1 ] ) return
+    x++
+  })
+  quay.on( '<left>', event => {
+    if ( x <= 0 ) return
+    x--
+  })
+
+  canvas.addEventListener( 'click', event => {
+    console.log( map.get( ( event.x / BLOCK_SIZE | 0 ) + x, ( event.y / BLOCK_SIZE | 0 ) + y ) )
+  })
+
+
+  return render
 }

@@ -2,6 +2,7 @@
 'use strict';
 
 var fit = require( 'canvas-fit' )
+var raf = require( 'raf-stream' )
 var Simplex = require( 'fast-simplex-noise' )
 var Noise = require( 'noisejs' ).Noise
 var Bezier = require( 'bezier-easing' )
@@ -11,7 +12,7 @@ var PRNG = require( 'seedrandom' )  // @TODO massively adds to bundle size, use 
 var clamp = require( 'mathutil' ).clamp
 var biomes = require( './biomes' )
 
-var DIMS = [ 256, 256 ]
+var DIMS = [ 1024, 1024 ]
 
 var canvas = document.createElement( 'canvas' )
 document.body.appendChild( canvas )
@@ -73,7 +74,7 @@ window.ease = {
 
 // this produces good looking landmasses and is quicker than the simplex version above,
 // although that is probably just due to less octaves being calculated
-var FREQ = 1 / 500
+var FREQ = 1 / 1000
 
 var perlin = new Noise( .25 )
 function terrain( x, y ) {
@@ -206,14 +207,15 @@ function go() {
   console.log( 'low', low, 'high', high )
 }
 
-go()
+// go()
+generate()
+raf( canvas )
+  .on( 'data', render )
 
 
 // Add mousemove handler
 const BLOCK_SIZE = 2
-canvas.addEventListener( 'click', event => {
-  console.log( map.get( event.x / BLOCK_SIZE | 0, event.y / BLOCK_SIZE | 0 ) )
-})
+
 
 window.render = render
 window.Bezier = Bezier
