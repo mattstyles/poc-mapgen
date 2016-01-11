@@ -45,7 +45,7 @@ window.noise2 = new Simplex({
   frequency: 1 / Math.pow( 2, freq ),
   random: new PRNG( require( './package.json' ).name + 'roughness'  )
 })
-const JITTER_AMOUNT = .1
+const JITTER_AMOUNT = .1   // This should probably be increased as freq goes up
 window.jitter = new Simplex({
   min: -1,
   max: 1,
@@ -73,7 +73,8 @@ window.ease = {
 
 // this produces good looking landmasses and is quicker than the simplex version above,
 // although that is probably just due to less octaves being calculated
-var FREQ = 1 / 50
+var FREQ = 1 / 500
+
 var perlin = new Noise( .25 )
 function terrain( x, y ) {
   var h = perlin.perlin2( x, y )
@@ -117,6 +118,8 @@ var temperature = 0
 var moisture = 0
 var biome = null
 
+var WATER_LEVEL = .5
+
 function generate() {
   var start = performance.now()
   for ( var y = 0; y < DIMS[ 1 ]; y++ ) {
@@ -125,16 +128,13 @@ function generate() {
       // roughness = noise2.get2DNoise( x, y )
       // detail = jitter.get2DNoise( x, y ) * JITTER_AMOUNT
       elevation = terrain( x * FREQ, y * FREQ )
-      roughness = terrain( x * FREQ * .95, y * FREQ * .95 )
-      detail = terrain( x * FREQ * 100, y * FREQ * 100 ) * JITTER_AMOUNT
+      roughness = terrain2( x * FREQ * .95, y * FREQ *.95 )
+      detail = terrain( x * FREQ * 120, y * FREQ * 120 ) * JITTER_AMOUNT
 
       height = ( elevation + ( roughness * detail ) )
       // height = elevation
       // height = roughness * detail
-      // height = ease.get( height )
 
-      // height = perlin.perlin2( x * FREQ, y * FREQ )
-      // height = terrain( x * FREQ, y * FREQ )
 
       height = clamp( .5 + .5 * height, 0, 1 )
       height = ease.get( height )
@@ -143,28 +143,38 @@ function generate() {
       /**
        * Generate temperature map
        * Use height to guide temp but add some noise
-       * hot places will all be under sea so raise up the temp map a little
+       * hot places will all be under sea but land temp so go 0...1, by changing
+       * the scale the sea will effectively become very hot
+       * @TODO should be influenced by some global scale too
        */
-      temperature = height * ( .98 + detail )
-      temperature = -.5 + 1.5 * temperature
+      // temperature = height * ( .98 + detail )
+      temperature = clamp( .5 + .5 * ( elevation + roughness ), 0, 1 )
+      temperature = ( temperature -.5 ) * 2
+      // temperature *= .5 + .5 * terrain2( x * FREQ * .15, y * FREQ * .15 )
       temperature = 1.0 - temperature
 
-      if ( height < .5 ) {
-        temperature = 0
+
+
+      // cool down sea temp a little, although they will become ocean anyway
+      if ( height < WATER_LEVEL ) {
+        temperature = height * ( 1 + WATER_LEVEL )
       }
+
+      temperature = clamp( temperature, 0, .999 )
 
 
       /**
-       * Generate moisture map, same freq as elevation but a diff seed
+       * Generate moisture map, use diff seed and much larger frequency to
+       * produce more variation
        */
-      moisture = terrain2( x * FREQ, y * FREQ )
+      moisture = terrain2( x * FREQ * 1.5, y * FREQ * 1.5 )
       moisture = clamp( .5 + .5 * moisture, 0, .9999 )
 
       /**
        * Tack on the biome
        */
       biome = biomes.get( moisture, temperature ).toUpperCase()
-      if ( height < .5 ) {
+      if ( height < WATER_LEVEL ) {
         biome = 'OCEAN'
       }
 
@@ -200,7 +210,7 @@ go()
 
 
 // Add mousemove handler
-const BLOCK_SIZE = 4
+const BLOCK_SIZE = 2
 canvas.addEventListener( 'click', event => {
   console.log( map.get( event.x / BLOCK_SIZE | 0, event.y / BLOCK_SIZE | 0 ) )
 })

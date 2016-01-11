@@ -8,17 +8,21 @@ var BIOME_COLORS = {
   'OCEAN': [ 48, 52, 109 ],
   'SNOW': [ 238, 240, 249 ],
   'TUNDRA': [ 214, 222, 232 ],
-  'SCORCHED': [ 178, 183, 182 ],
+  'BARREN': [ 178, 183, 202 ],
   'TAIGA': [ 133, 181, 165 ],
   'SHRUBLAND': [ 109, 107, 44 ],
-  'TEMPERATE_DESERT': [ 200, 194, 82 ],
-  'TEMPERATE_RAINFOREST': [ 52, 131, 96 ],
-  'TEMPERATE_FOREST': [ 52, 101, 36 ],
+  'COLD_DESERT': [ 200, 194, 172 ],
+  'WOODLAND': [ 52, 131, 96 ],
+  'FOREST': [ 52, 101, 36 ],
   'GRASSLAND': [ 110, 170, 62 ],
   'DESERT': [ 232, 212, 94 ],
-  'TROPICAL_RAINFOREST': [ 92, 162, 125 ],
+  'RAINFOREST': [ 92, 162, 125 ],
   'PLAINS': [ 162, 192, 62 ],
-  'TROPICAL_FOREST': [ 102, 204, 144 ]
+  'JUNGLE': [ 102, 204, 144 ]
+}
+
+function applyAlpha( color, alpha ) {
+  return color.map( c => c * alpha | 0 )
 }
 
 function makeColor( color, alpha ) {
@@ -51,7 +55,7 @@ function step( value, divisions ) {
 
 var BLOCK_SIZE = 4
 var WATER_LEVEL = .5
-var HEIGHT_STEP = 20
+var HEIGHT_STEP = 30
 
 module.exports = function renderable( canvas ) {
   var ctx = canvas.getContext( '2d' )
@@ -105,7 +109,11 @@ module.exports = function renderable( canvas ) {
           biome = BIOME_COLORS.OCEAN
         }
 
-        col = makeColor( biome )
+        col = makeColor( applyAlpha( biome, height ) )
+        // col = makeColor( applyAlpha( biome, step( height, HEIGHT_STEP ) ) )
+
+        // test individual cell features
+        // col = color( height )
 
 
         ctx.fillStyle = col

@@ -12,17 +12,17 @@ const BIOMES = mirror([
   'OCEAN',
   'SNOW',
   'TUNDRA',
-  'SCORCHED',
+  'BARREN',
   'TAIGA',
   'SHRUBLAND',
-  'TEMPERATE_DESERT',
-  'TEMPERATE_RAINFOREST',
-  'TEMPERATE_FOREST',
+  'COLD_DESERT',
+  'WOODLAND',
+  'FOREST',
   'GRASSLAND',
   'DESERT',
-  'TROPICAL_RAINFOREST',
+  'RAINFOREST',
   'PLAINS',
-  'TROPICAL_FOREST'
+  'JUNGLE'
 ])
 
 // 2d table measuring moisture(6) against temperature(4)
@@ -38,19 +38,19 @@ function set( p0, p1, value ) {
 
 set( [ 3, 0 ], [ 5, 0 ], BIOMES.SNOW )
 set( [ 1, 0 ], [ 2, 0 ], BIOMES.TUNDRA )
-set( [ 0, 0 ], [ 0, 0 ], BIOMES.SCORCHED )
+set( [ 0, 0 ], [ 0, 0 ], BIOMES.BARREN )
 
 set( [ 4, 1 ], [ 5, 1 ], BIOMES.TAIGA )
 set( [ 2, 1 ], [ 3, 1 ], BIOMES.SHRUBLAND )
-set( [ 0, 1 ], [ 1, 1 ], BIOMES.TEMPERATE_DESERT )
+set( [ 0, 1 ], [ 1, 1 ], BIOMES.COLD_DESERT )
 
-set( [ 5, 2 ], [ 5, 2 ], BIOMES.TEMPERATE_RAINFOREST )
-set( [ 3, 2 ], [ 4, 2 ], BIOMES.TEMPERATE_FOREST )
+set( [ 5, 2 ], [ 5, 2 ], BIOMES.WOODLAND )
+set( [ 3, 2 ], [ 4, 2 ], BIOMES.FOREST )
 set( [ 1, 2 ], [ 2, 2 ], BIOMES.GRASSLAND )
-set( [ 0, 2 ], [ 0, 2 ], BIOMES.TEMPERATE_DESERT )
+set( [ 0, 2 ], [ 0, 2 ], BIOMES.COLD_DESERT )
 
-set( [ 5, 3 ], [ 5, 3 ], BIOMES.TROPICAL_RAINFOREST )
-set( [ 4, 3 ], [ 4, 3 ], BIOMES.TROPICAL_FOREST )
+set( [ 5, 3 ], [ 5, 3 ], BIOMES.RAINFOREST )
+set( [ 4, 3 ], [ 4, 3 ], BIOMES.JUNGLE )
 set( [ 2, 3 ], [ 3, 3 ], BIOMES.PLAINS )
 set( [ 0, 3 ], [ 1, 3 ], BIOMES.DESERT )
 
