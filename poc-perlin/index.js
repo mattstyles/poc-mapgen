@@ -14,6 +14,10 @@ var biomes = require( './biomes' )
 
 var DIMS = [ 1024, 1024 ]
 
+Object.assign( document.body.style, {
+  background: 'black'
+})
+
 var biomeText = document.createElement( 'div' )
 biomeText.classList.add( 'js-biomeText' )
 document.body.appendChild( biomeText )
@@ -90,9 +94,9 @@ window.ease = {
 
 // this produces good looking landmasses and is quicker than the simplex version above,
 // although that is probably just due to less octaves being calculated
-var FREQ = 1 / 2000
-// var seed = 0.5112814791500568
-var seed = Math.random()
+var FREQ = 1 / 500
+var seed = 0.5112814791500568
+// var seed = Math.random()
 
 console.log( 'seed', seed )
 localStorage.setItem( 'seed', seed )

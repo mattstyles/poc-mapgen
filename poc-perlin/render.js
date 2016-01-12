@@ -54,8 +54,8 @@ function step( value, divisions ) {
   return 0
 }
 
-var BLOCK_SIZE = 16
-var SHOW_SIZE = [ 38 * ( 32 / BLOCK_SIZE ), 24 * ( 32 / BLOCK_SIZE ) ]
+var BLOCK_SIZE = [ 12, 16 ]
+var SHOW_SIZE = [ 38 * ( 32 / BLOCK_SIZE[ 0 ] ), 24 * ( 32 / BLOCK_SIZE[ 1 ] ) ]
 var WATER_LEVEL = .5
 var HEIGHT_STEP = 40
 
@@ -84,11 +84,14 @@ module.exports = function renderable( canvas ) {
 
   var x = 0
   var y = 0
+  var char = '#'
+
+  ctx.font = BLOCK_SIZE[ 1 ] + 'px "DejaVu Sans Mono"'
 
   function render( map ) {
     var start = performance.now()
     // ctx.clearRect( 0, 0, map.shape[ 0 ] * BLOCK_SIZE, map.shape[ 1 ] * BLOCK_SIZE )
-    ctx.clearRect( 0, 0, SHOW_SIZE[ 0 ] * BLOCK_SIZE, SHOW_SIZE[ 1 ] * BLOCK_SIZE )
+    ctx.clearRect( 0, 0, SHOW_SIZE[ 0 ] * BLOCK_SIZE[ 0 ], SHOW_SIZE[ 1 ] * BLOCK_SIZE[ 1 ] )
 
     // for ( var i = 0; i < map.shape[ 1 ]; i++ ) {
     //   for ( var j = 0; j < map.shape[ 0 ]; j++ ) {
@@ -132,33 +135,44 @@ module.exports = function renderable( canvas ) {
 
 
         ctx.fillStyle = col
-        ctx.fillRect( ( i - x ) * BLOCK_SIZE, ( j - y ) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE )
+        // ctx.fillRect( ( i - x ) * BLOCK_SIZE, ( j - y ) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE )
+
+        char = cell[ 3 ] === 'OCEAN' ? '#' : '.'
+        ctx.fillText( char, ( i - x ) * BLOCK_SIZE[ 0 ], ( j - y ) * BLOCK_SIZE[ 1 ] )
       }
     }
     // console.log( 'render done:', performance.now() - start )
+
+    // Render a dummy character
+    char = '@'
+    ctx.fillStyle = makeColor( [ 218, 212, 94 ] )
+    ctx.fillText( char, ( SHOW_SIZE[ 0 ] * .5 ) * BLOCK_SIZE[ 0 ], ( SHOW_SIZE[ 1 ] * .5 ) * BLOCK_SIZE[ 1 ] )
   }
 
   var quay = new Quay()
 
-  quay.on( '<down>', event => {
-    if ( y >= map.shape[ 1 ] - SHOW_SIZE[ 1 ] ) return
-    y += ( 32 / BLOCK_SIZE )
-  })
-  quay.on( '<up>', event => {
-    if ( y <= 0 ) return
-    y -= ( 32 / BLOCK_SIZE )
-  })
   quay.on( '<right>', event => {
     if ( x >= map.shape[ 0 ] - SHOW_SIZE[ 0 ] ) return
-    x += ( 32 / BLOCK_SIZE )
+    x += ( 32 / BLOCK_SIZE[ 0 ] ) | 0
   })
   quay.on( '<left>', event => {
     if ( x <= 0 ) return
-    x -= ( 32 / BLOCK_SIZE )
+    x -= ( 32 / BLOCK_SIZE[ 0 ] ) | 0
+  })
+  quay.on( '<down>', event => {
+    if ( y >= map.shape[ 1 ] - SHOW_SIZE[ 1 ] ) return
+    y += ( 32 / BLOCK_SIZE[ 1 ] ) | 0
+  })
+  quay.on( '<up>', event => {
+    if ( y <= 0 ) return
+    y -= ( 32 / BLOCK_SIZE[ 1 ] ) | 0
   })
 
   canvas.addEventListener( 'click', event => {
-    let cell = map.get( ( event.x / BLOCK_SIZE | 0 ) + x, ( event.y / BLOCK_SIZE | 0 ) + y )
+    var i = ( event.x / BLOCK_SIZE[ 0 ] | 0 ) + x
+    var j =  ( event.y / BLOCK_SIZE[ 1 ] | 0 ) + y
+    let cell = map.get( i, j )
+    console.log( '<' + i + ', ' + j + '>' )
     console.log( 'biome:%c' + cell[ 3 ], 'color:' + makeColor( BIOME_COLORS[ cell[ 3 ] ] ) )
     console.log( '  elevation:   %c' + cell[ 0 ].toFixed( 3 ), 'color:' + makeColor( applyAlpha( [ 190, 190, 190 ], cell[ 0 ] ) ) )
     console.log( '  temperature: %c' + cell[ 1 ].toFixed( 3 ), 'color:' + makeColor( applyAlpha( [ 224, 111, 139 ], cell[ 1 ] ) ) )
@@ -167,7 +181,7 @@ module.exports = function renderable( canvas ) {
 
   var biomeText = document.querySelector( '.js-biomeText' )
   canvas.addEventListener( 'mousemove', event => {
-    let cell = map.get( ( event.x / BLOCK_SIZE | 0 ) + x, ( event.y / BLOCK_SIZE | 0 ) + y )
+    let cell = map.get( ( event.x / BLOCK_SIZE[ 0 ] | 0 ) + x, ( event.y / BLOCK_SIZE[ 1 ] | 0 ) + y )
     biomeText.innerHTML = cell ? cell[ 3 ] : ''
   })
 
