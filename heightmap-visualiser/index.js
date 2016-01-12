@@ -4,6 +4,7 @@
 var fit = require( 'canvas-fit' )
 var ndarray = require( 'ndarray' )
 var Simplex = require( 'fast-simplex-noise' )
+var quickNoise = require( 'quick-noise-js' )
 var Noise = require( 'noisejs' ).Noise
 var PRNG = require( 'seedrandom' )  // seedrandom is big, smaller option?
 
@@ -19,45 +20,74 @@ var ctx = canvas.getContext( '2d' )
 /**
  * noise functions
  */
-// var seed = Math.random()
-// var base = new Noise( seed )
+// perlin2 is smoother than simplex2, but it does mean that octaves
+// avergae it out further
+var seed = Math.random()
+var base = new Noise( seed )
+var noise = {
+  get: function( x, y ) {
+    var frequency = 1 / 10
+    var octaves = 6
+    var persistence = .5
+    var amplitude = 1
+    var maxAmplitude = 0
+    var n = 0
+    for ( var l = 0; l < octaves; l++ ) {
+      n += base.perlin2( x * frequency, y * frequency ) * amplitude
+      maxAmplitude += amplitude
+      amplitude *= persistence
+      frequency *= 2
+    }
+    return n / maxAmplitude
+  }
+}
 // var noise = {
-//   // This is not right at all!
-//   get: function( x, y ) {
-//     var frequency = 1 / 50
-//     var octaves = 6
-//     var persistence = .5
-//     var i = x * frequency
-//     var j = y * frequency
-//     var v = base.perlin2( i, j )
-//     var l
-//     for ( l = 0; l < octaves; l++ ) {
-//       i *= 2
-//       j *= 2
-//       v += base.perlin2( i, j ) * persistence
-//       persistence *= .5
-//     }
-//     return v
+//   get: function terrain( x, y ) {
+//     var frequency = 1 / 500
+//     x = x * frequency
+//     y = y * frequency
+//     var h = base.perlin2( x, y )
+//     x *= 2.94
+//     y *= 2.94
+//     h += base.perlin2( x, y ) * .4
+//     x *= 2.87
+//     y *= 2.87
+//     h += base.perlin2( x, y ) * .15
+//     x *= 2.63
+//     y *= 2.63
+//     h += base.perlin2( x, y ) * .075
+//     // return Math.pow( h, 2 )
+//     return .5 + .5 * h
 //   }
 // }
 
 // only problem with octaved noise is the averaging that occurs
-// so that -1...1 range ends up closer to -.7 to .7
-var simplex = new Simplex({
-  min: -1,
-  max: 1,
-  octaves: 6,
-  amplitude: 1,
-  frequency: 1 / 100,
-  persistence: .5,
-  // random: PRNG( require( './package.json' ).name )
-  random: Math.random
-})
-var noise = {
-  get: function( x, y ) {
-    return simplex.get2DNoise( x, y )
-  }
-}
+// so that -1...1 range ends up closer to -.75 to .75
+// var simplex = new Simplex({
+//   min: -1,
+//   max: 1,
+//   octaves: 6,
+//   amplitude: 1,
+//   frequency: 1 / 10,
+//   persistence: .5,
+//   // random: PRNG( require( './package.json' ).name )
+//   random: Math.random
+// })
+// var noise = {
+//   get: function( x, y ) {
+//     return simplex.get2DNoise( x, y )
+//   }
+// }
+
+// Doesnt work very well, creating a seeded table does not randomise
+// and it is slower than noisejs (even noisejs.perlin3)
+// var base = quickNoise.create( Math.random )
+// var base = quickNoise.noise
+// var noise = {
+//   get: function( x, y ) {
+//     return base( x * .05, y * .05, 1 )
+//   }
+// }
 
 /**
  * ndarray image generation
