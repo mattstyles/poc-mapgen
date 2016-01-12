@@ -13,10 +13,6 @@ window.addEventListener( 'resize', fit( canvas ), false )
 document.body.appendChild( canvas )
 
 var ctx = canvas.getContext( '2d' )
-var image = ctx.createImageData( WIDTH, HEIGHT )
-var data = image.data
-
-window.image = image
 
 var nd = ndarray( new Float32Array( WIDTH * HEIGHT ), [ WIDTH, HEIGHT ] )
 window.nd = nd
@@ -31,16 +27,22 @@ function generate() {
   console.log( 'heightmap generation time:', performance.now() - start )
 }
 
+var image = ctx.createImageData( WIDTH, HEIGHT )
+window.image = image
+var data = image.data
+
 function render() {
   var start = performance.now()
   var index = 0
-  nd.data.forEach( ( h, i ) => {
+  var h = 0
+  for( var i = 0; i < nd.shape[ 0 ] * nd.shape[ 1 ]; i++ ) {
+    h = nd.data[ i ]
     index = i * 4
     data[ index ] = h * 255 | 0
     data[ index + 1 ] = h * 255 | 0
     data[ index + 2 ] = h * 255 | 0
     data[ index + 3 ] = 255
-  })
+  }
 
   ctx.putImageData( image, 0, 0 )
   console.log( 'render time:', performance.now() - start )
@@ -53,13 +55,13 @@ render()
 var start = 0
 var count = 0
 var time = 0
-var timeout = setTimeout( function frame() {
-  start = performance.now()
-  render()
-  time += performance.now() - start
-  count++
-  timeout = setTimeout( frame, 100 )
-}, 100 )
+// var timeout = setTimeout( function frame() {
+//   start = performance.now()
+//   render()
+//   time += performance.now() - start
+//   count++
+//   timeout = setTimeout( frame, 100 )
+// }, 100 )
 
 var btn = document.createElement( 'button' )
 btn.innerHTML = 'Stop'

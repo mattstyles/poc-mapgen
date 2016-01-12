@@ -14,6 +14,9 @@
   },
   "dependencies": {
     "canvas-fit": "^1.5.0",
-    "ndarray": "^1.0.18"
+    "fast-simplex-noise": "^1.0.0",
+    "ndarray": "^1.0.18",
+    "noisejs": "^2.1.0",
+    "seedrandom": "^2.4.2"
   }
 }
