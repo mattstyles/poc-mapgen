@@ -14,6 +14,22 @@ var biomes = require( './biomes' )
 
 var DIMS = [ 1024, 1024 ]
 
+var biomeText = document.createElement( 'div' )
+biomeText.classList.add( 'js-biomeText' )
+document.body.appendChild( biomeText )
+Object.assign( biomeText.style, {
+  position: 'absolute',
+  top: '2px',
+  right: '2px',
+  zIndex: '1000',
+  background: 'rgba(0,0,0,.9)',
+  color: 'white',
+  fontFamily: 'Coolville, "Helvetica Neue", sans-serif',
+  fontSize: '20px',
+  padding: '3px 12px',
+  borderRadius: '3px'
+})
+
 var canvas = document.createElement( 'canvas' )
 document.body.appendChild( canvas )
 window.addEventListener( 'resize', fit( canvas, window, window.devicePixelRatio ), false )
@@ -58,7 +74,7 @@ window.jitter = new Simplex({
 // @TODO easing like this is slow
 // var ease = new Bezier( 0, 0, .75, 1 )
 // window.ease = new Bezier( .25, 0, .65, 1 )
-var b = new Bezier( .25, 0, .65, 1 )
+var b = new Bezier( .6, .25, .8, 1 )
 
 // 3x^2 - 2x^3
 // much much quicker than calculating the bezier
@@ -74,9 +90,14 @@ window.ease = {
 
 // this produces good looking landmasses and is quicker than the simplex version above,
 // although that is probably just due to less octaves being calculated
-var FREQ = 1 / 1000
+var FREQ = 1 / 2000
+// var seed = 0.5112814791500568
+var seed = Math.random()
 
-var perlin = new Noise( .25 )
+console.log( 'seed', seed )
+localStorage.setItem( 'seed', seed )
+
+var perlin = new Noise( seed )
 function terrain( x, y ) {
   var h = perlin.perlin2( x, y )
   x *= 2.94
@@ -92,7 +113,7 @@ function terrain( x, y ) {
   return h
 }
 
-var perlin2 = new Noise( .257 )
+var perlin2 = new Noise( seed > .8 ? seed - .05 : seed + .05 )
 function terrain2( x, y ) {
   var h = perlin2.perlin2( x, y )
   x *= 2.94
@@ -120,6 +141,7 @@ var moisture = 0
 var biome = null
 
 var WATER_LEVEL = .5
+var count = 0
 
 function generate() {
   var start = performance.now()
@@ -148,19 +170,17 @@ function generate() {
        * the scale the sea will effectively become very hot
        * @TODO should be influenced by some global scale too
        */
-      // temperature = height * ( .98 + detail )
-      temperature = clamp( .5 + .5 * ( elevation + roughness ), 0, 1 )
-      temperature = ( temperature -.5 ) * 2
-      // temperature *= .5 + .5 * terrain2( x * FREQ * .15, y * FREQ * .15 )
+      temperature = b.get( ( height - .5 ) * 2 )
       temperature = 1.0 - temperature
-
-
 
       // cool down sea temp a little, although they will become ocean anyway
       if ( height < WATER_LEVEL ) {
-        temperature = height * ( 1 + WATER_LEVEL )
+        temperature = height
       }
 
+      if ( temperature > .999 ) {
+        count++
+      }
       temperature = clamp( temperature, 0, .999 )
 
 
@@ -168,8 +188,9 @@ function generate() {
        * Generate moisture map, use diff seed and much larger frequency to
        * produce more variation
        */
-      moisture = terrain2( x * FREQ * 1.5, y * FREQ * 1.5 )
+      moisture = terrain2( x * FREQ * .25, y * FREQ * .25 )
       moisture = clamp( .5 + .5 * moisture, 0, .9999 )
+      moisture = ease.get( moisture )
 
       /**
        * Tack on the biome
@@ -183,6 +204,7 @@ function generate() {
     }
   }
   console.log( 'generation done:', performance.now() - start )
+  console.log( 'temp overs', count, (count / [ DIMS[ 0 ] * DIMS[ 1 ] ] * 100).toFixed( 1 ) + '%' )
 }
 
 function render() {
@@ -195,26 +217,31 @@ function go() {
 
   var low = Number.MAX_SAFE_INTEGER
   var high = Number.MIN_SAFE_INTEGER
+  var low2 = Number.MAX_SAFE_INTEGER
+  var high2 = Number.MIN_SAFE_INTEGER
+  var e, t
   map.data.forEach( h => {
     // only count land tiles
     if ( h[ 0 ] < .5 ) {
       return
     }
-    h = h[ 1 ]
-    low = h < low ? h : low
-    high = h > high ? h : high
+    e = h[ 0 ] // elevation
+    low = e < low ? e : low
+    high = e > high ? e : high
+    t = h[ 1 ] // temp
+    low2 = t < low2 ? t : low2
+    high2 = t > high2 ? t : high2
   })
-  console.log( 'low', low, 'high', high )
+  console.log( 'elevation:   ', 'low', low, 'high', high )
+  console.log( 'temperature: ', 'low', low2, 'high', high2 )
 }
 
 // go()
 generate()
+// render()
 raf( canvas )
   .on( 'data', render )
 
-
-// Add mousemove handler
-const BLOCK_SIZE = 2
 
 
 window.render = render

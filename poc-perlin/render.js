@@ -54,8 +54,8 @@ function step( value, divisions ) {
   return 0
 }
 
-var BLOCK_SIZE = 32
-var SHOW_SIZE = [ 38, 24 ]
+var BLOCK_SIZE = 16
+var SHOW_SIZE = [ 38 * ( 32 / BLOCK_SIZE ), 24 * ( 32 / BLOCK_SIZE ) ]
 var WATER_LEVEL = .5
 var HEIGHT_STEP = 40
 
@@ -95,6 +95,12 @@ module.exports = function renderable( canvas ) {
     for ( var i = x; i < x + SHOW_SIZE[ 0 ]; i++ ) {
       for ( var j = y; j < y + SHOW_SIZE[ 1 ]; j++ ) {
         cell = map.get( i, j )
+
+        // Can happen sometimes when playing with map and render sizes
+        if ( !cell ) {
+          return
+        }
+
         height = cell[ 0 ]
         temp = cell[ 1 ]
         moisture = cell[ 2 ]
@@ -118,11 +124,11 @@ module.exports = function renderable( canvas ) {
           biome = BIOME_COLORS.OCEAN
         }
 
-        // col = makeColor( applyAlpha( biome, height ) )
-        col = makeColor( applyAlpha( biome, step( height, HEIGHT_STEP ) ) )
+        col = makeColor( applyAlpha( biome, height ) )
+        // col = makeColor( applyAlpha( biome, step( height, HEIGHT_STEP ) ) )
 
         // test individual cell features
-        // col = color( height )
+        // col = color( temp )
 
 
         ctx.fillStyle = col
@@ -135,24 +141,34 @@ module.exports = function renderable( canvas ) {
   var quay = new Quay()
 
   quay.on( '<down>', event => {
-    if ( y >= map.shape[ 1 ] - SHOW_SIZE[ 0 ] ) return
-    y++
+    if ( y >= map.shape[ 1 ] - SHOW_SIZE[ 1 ] ) return
+    y += ( 32 / BLOCK_SIZE )
   })
   quay.on( '<up>', event => {
     if ( y <= 0 ) return
-    y--
+    y -= ( 32 / BLOCK_SIZE )
   })
   quay.on( '<right>', event => {
-    if ( x >= map.shape[ 0 ] - SHOW_SIZE[ 1 ] ) return
-    x++
+    if ( x >= map.shape[ 0 ] - SHOW_SIZE[ 0 ] ) return
+    x += ( 32 / BLOCK_SIZE )
   })
   quay.on( '<left>', event => {
     if ( x <= 0 ) return
-    x--
+    x -= ( 32 / BLOCK_SIZE )
   })
 
   canvas.addEventListener( 'click', event => {
-    console.log( map.get( ( event.x / BLOCK_SIZE | 0 ) + x, ( event.y / BLOCK_SIZE | 0 ) + y ) )
+    let cell = map.get( ( event.x / BLOCK_SIZE | 0 ) + x, ( event.y / BLOCK_SIZE | 0 ) + y )
+    console.log( 'biome:%c' + cell[ 3 ], 'color:' + makeColor( BIOME_COLORS[ cell[ 3 ] ] ) )
+    console.log( '  elevation:   %c' + cell[ 0 ].toFixed( 3 ), 'color:' + makeColor( applyAlpha( [ 190, 190, 190 ], cell[ 0 ] ) ) )
+    console.log( '  temperature: %c' + cell[ 1 ].toFixed( 3 ), 'color:' + makeColor( applyAlpha( [ 224, 111, 139 ], cell[ 1 ] ) ) )
+    console.log( '  moisture:    %c' + cell[ 2 ].toFixed( 3 ), 'color:' + makeColor( applyAlpha( [ 49, 162, 242 ], cell[ 2 ] ) ) )
+  })
+
+  var biomeText = document.querySelector( '.js-biomeText' )
+  canvas.addEventListener( 'mousemove', event => {
+    let cell = map.get( ( event.x / BLOCK_SIZE | 0 ) + x, ( event.y / BLOCK_SIZE | 0 ) + y )
+    biomeText.innerHTML = cell ? cell[ 3 ] : ''
   })
 
 
