@@ -70,7 +70,7 @@ var ctx = canvas.getContext( '2d' )
 // var seed = 0.3350439574569464
 var seed = Math.random()
 console.log( 'seed', seed )
-var frequency = 280
+var frequency = 220
 
 var roughness = new Simplex({
   min: -1.4,
@@ -154,6 +154,19 @@ function color( value ) {
   ]
 }
 
+function getColor( value ) {
+  if ( value < 0 ) {
+    return [ 48, 52, 109, 255 ]
+  }
+  if ( value >= 0 && value < .45 ) {
+    return [ 52, 101, 36, 255 ]
+  }
+  if ( value >= .45 && value < .75 ) {
+    return [ 109, 170, 44, 255 ]
+  }
+  return [ 222, 238, 214, 255 ]
+}
+
 function render() {
   var start = performance.now()
   var index = 0
@@ -179,7 +192,8 @@ function render() {
     for ( var x = 0; x < nd.shape[ 0 ]; x++ ) {
       tile = nd.get( x, y )
       index = ( x + y * nd.shape[ 0 ] ) * 4
-      col = color( .5 + .5 * tile )
+      // col = color( .5 + .5 * tile )
+      col = getColor( tile )
       for ( var l = 0; l < col.length; l++ ) {
         data[ index + l ] = col[ l ]
       }
