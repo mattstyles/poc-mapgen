@@ -25,13 +25,6 @@ var BIOME_COLORS = {
 function applyAlpha( color, alpha ) {
   return color.map( c => c * alpha | 0 )
 }
-function colorArray( value ) {
-  return [
-    clamp( value, 0, 1 ) * 0xff | 0,
-    clamp( value, 0, 1 ) * 0xff | 0,
-    clamp( value, 0, 1 ) * 0xff | 0
-  ]
-}
 
 function makeColor( color, alpha ) {
   alpha = alpha || 1
@@ -61,9 +54,8 @@ function step( value, divisions ) {
   return 0
 }
 
-var BLOCK_SIZE = [ 1, 1 ]
+var BLOCK_SIZE = [ 12, 16 ]
 var SHOW_SIZE = [ 38 * ( 32 / BLOCK_SIZE[ 0 ] ), 24 * ( 32 / BLOCK_SIZE[ 1 ] ) ]
-// SHOW_SIZE = [ 256, 256 ]
 var WATER_LEVEL = .5
 var HEIGHT_STEP = 40
 
@@ -92,27 +84,19 @@ module.exports = function renderable( canvas ) {
 
   var x = 0
   var y = 0
+  var char = '#'
 
-  var image = ctx.createImageData( 512, 512 )
-  var data = image.data
+  ctx.font = BLOCK_SIZE[ 1 ] + 'px "DejaVu Sans Mono"'
 
   function render( map ) {
     var start = performance.now()
     // ctx.clearRect( 0, 0, map.shape[ 0 ] * BLOCK_SIZE, map.shape[ 1 ] * BLOCK_SIZE )
-    // ctx.clearRect( 0, 0, SHOW_SIZE[ 0 ] * BLOCK_SIZE[ 0 ], SHOW_SIZE[ 1 ] * BLOCK_SIZE[ 1 ] )
+    ctx.clearRect( 0, 0, SHOW_SIZE[ 0 ] * BLOCK_SIZE[ 0 ], SHOW_SIZE[ 1 ] * BLOCK_SIZE[ 1 ] )
 
-    // I think this is fairly expensive so should be moved out of this loop
-    // When map sizes are fixed it will be trivial but whilst testing the map
-    // size will change
-    // var image = ctx.createImageData( map.shape[ 0 ], map.shape[ 1 ] )
-    // var data = image.data
-
-    var index = 0
-
-    for ( var i = 0; i < map.shape[ 0 ]; i++ ) {
-      for ( var j = 0; j < map.shape[ 1 ]; j++ ) {
-    // for ( var i = y; i < y + SHOW_SIZE[ 1 ]; i++ ) {
-    //   for ( var j = x; j < x + SHOW_SIZE[ 0 ]; j++ ) {
+    // for ( var i = 0; i < map.shape[ 1 ]; i++ ) {
+    //   for ( var j = 0; j < map.shape[ 0 ]; j++ ) {
+    for ( var i = x; i < x + SHOW_SIZE[ 0 ]; i++ ) {
+      for ( var j = y; j < y + SHOW_SIZE[ 1 ]; j++ ) {
         cell = map.get( i, j )
 
         // Can happen sometimes when playing with map and render sizes
@@ -143,36 +127,26 @@ module.exports = function renderable( canvas ) {
           biome = BIOME_COLORS.OCEAN
         }
 
-        /**
-         * Render using fillTect
-         */
-        // col = makeColor( applyAlpha( biome, height ) )
+        col = makeColor( applyAlpha( biome, height ) )
         // col = makeColor( applyAlpha( biome, step( height, HEIGHT_STEP ) ) )
 
         // test individual cell features
         // col = color( temp )
 
-        // ctx.fillStyle = col
-        // ctx.fillRect( ( i - x ) * BLOCK_SIZE[ 0 ], ( j - y ) * BLOCK_SIZE[ 1 ], BLOCK_SIZE[ 0 ], BLOCK_SIZE[ 1 ] )
 
-        /**
-         * Render using putImageData
-         */
-        col = applyAlpha( biome, step( height, HEIGHT_STEP ) )
-        // col = colorArray( temp )
+        ctx.fillStyle = col
+        // ctx.fillRect( ( i - x ) * BLOCK_SIZE, ( j - y ) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE )
 
-        index = ( i + j * map.shape[ 0 ] ) * 4
-        for ( var l = 0; l < col.length; l++ ) {
-          data[ index + l ] = col[ l ]
-        }
-        data[ index + 3 ] = 255
-
+        char = cell[ 3 ] === 'OCEAN' ? '#' : '.'
+        ctx.fillText( char, ( i - x ) * BLOCK_SIZE[ 0 ], ( j - y ) * BLOCK_SIZE[ 1 ] )
       }
     }
+    // console.log( 'render done:', performance.now() - start )
 
-    ctx.putImageData( image, 0, 0 )
-
-    console.log( 'render done:', performance.now() - start )
+    // Render a dummy character
+    char = '@'
+    ctx.fillStyle = makeColor( [ 218, 212, 94 ] )
+    ctx.fillText( char, ( SHOW_SIZE[ 0 ] * .5 ) * BLOCK_SIZE[ 0 ], ( SHOW_SIZE[ 1 ] * .5 ) * BLOCK_SIZE[ 1 ] )
   }
 
   var quay = new Quay()

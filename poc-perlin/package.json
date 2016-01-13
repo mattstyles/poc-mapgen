@@ -13,6 +13,7 @@
     "budo": "^7.1.0"
   },
   "dependencies": {
+    "alea": "0.0.9",
     "bezier-easing": "^1.1.1",
     "canvas-fit": "^1.5.0",
     "fast-simplex-noise": "^1.0.0",

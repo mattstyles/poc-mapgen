@@ -7,12 +7,13 @@ var Simplex = require( 'fast-simplex-noise' )
 var Noise = require( 'noisejs' ).Noise
 var Bezier = require( 'bezier-easing' )
 var ndarray = require( 'ndarray' )
-var PRNG = require( 'seedrandom' )  // @TODO massively adds to bundle size, use another
+// var PRNG = require( 'seedrandom' )  // @TODO massively adds to bundle size, use another
+var Alea = require( 'alea' )
 // var dist = require( 'mathutil' ).euclidean
 var clamp = require( 'mathutil' ).clamp
 var biomes = require( './biomes' )
 
-var DIMS = [ 1024, 1024 ]
+var DIMS = [ 512, 512 ]
 
 Object.assign( document.body.style, {
   background: 'black'
@@ -47,7 +48,12 @@ function gradient( origin, radius, target ) {
   return 1.0 - dist( origin, target ) / radius
 }
 
-var freq = 7.7
+var seed = Math.random()
+// var seed = 0.4047927854117006
+var freq = 1200
+
+console.log( 'seed', seed )
+localStorage.setItem( 'seed', seed )
 
 // Remember to add octaves, otherwise it defaults to 1 which is smooth
 window.noise = new Simplex({
@@ -55,24 +61,24 @@ window.noise = new Simplex({
   max: 1,
   octaves: 8,
   persistence: .55,
-  frequency: 1 / Math.pow( 2, freq ),
-  random: new PRNG( require( './package.json' ).name )
+  frequency: 1 / freq,
+  random: new Alea( seed )
 })
 window.noise2 = new Simplex({
   min: -1,
   max: 1,
   octaves: 8,
   persistence: .65,
-  frequency: 1 / Math.pow( 2, freq ),
-  random: new PRNG( require( './package.json' ).name + 'roughness'  )
+  frequency: 1 / freq,
+  random: new Alea( seed + 1 )
 })
 const JITTER_AMOUNT = .1   // This should probably be increased as freq goes up
 window.jitter = new Simplex({
   min: -1,
   max: 1,
   octaves: 4,
-  frequency: 1 / Math.pow( 2, freq * .15 ),
-  random: new PRNG( require( './package.json' ).name + 'detail' )
+  frequency: 1 / freq * .15,
+  random: new Alea( seed + 2 )
 })
 
 // @TODO easing like this is slow
@@ -94,12 +100,12 @@ window.ease = {
 
 // this produces good looking landmasses and is quicker than the simplex version above,
 // although that is probably just due to less octaves being calculated
-var FREQ = 1 / 500
-var seed = 0.5112814791500568
+// var FREQ = 1 / 500
+// var seed = 0.5112814791500568
 // var seed = Math.random()
 
-console.log( 'seed', seed )
-localStorage.setItem( 'seed', seed )
+// console.log( 'seed', seed )
+// localStorage.setItem( 'seed', seed )
 
 var perlin = new Noise( seed )
 function terrain( x, y ) {
@@ -151,12 +157,12 @@ function generate() {
   var start = performance.now()
   for ( var y = 0; y < DIMS[ 1 ]; y++ ) {
     for ( var x = 0; x < DIMS[ 0 ]; x++ ) {
-      // elevation = noise.get2DNoise( x, y )
-      // roughness = noise2.get2DNoise( x, y )
-      // detail = jitter.get2DNoise( x, y ) * JITTER_AMOUNT
-      elevation = terrain( x * FREQ, y * FREQ )
-      roughness = terrain2( x * FREQ * .95, y * FREQ *.95 )
-      detail = terrain( x * FREQ * 120, y * FREQ * 120 ) * JITTER_AMOUNT
+      elevation = noise.get2DNoise( x, y )
+      roughness = noise2.get2DNoise( x, y )
+      detail = jitter.get2DNoise( x, y ) * JITTER_AMOUNT
+      // elevation = terrain( x * FREQ, y * FREQ )
+      // roughness = terrain2( x * FREQ * .95, y * FREQ *.95 )
+      // detail = terrain( x * FREQ * 120, y * FREQ * 120 ) * JITTER_AMOUNT
 
       height = ( elevation + ( roughness * detail ) )
       // height = elevation
@@ -192,7 +198,7 @@ function generate() {
        * Generate moisture map, use diff seed and much larger frequency to
        * produce more variation
        */
-      moisture = terrain2( x * FREQ * .25, y * FREQ * .25 )
+      moisture = noise2.get2DNoise( x * .1, y * .1 )
       moisture = clamp( .5 + .5 * moisture, 0, .9999 )
       moisture = ease.get( moisture )
 
@@ -242,9 +248,9 @@ function go() {
 
 // go()
 generate()
-// render()
-raf( canvas )
-  .on( 'data', render )
+render()
+// raf( canvas )
+//   .on( 'data', render )
 
 
 
